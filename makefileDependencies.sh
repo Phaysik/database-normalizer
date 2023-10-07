@@ -24,7 +24,7 @@ main() {
         sudo cp ./lib/libgtest*.a /usr/lib
 
         echo "Installing Sphinx and it's dependencies for documentation"
-        pip3 install sphinx breathe sphinx-rtd-theme
+        pip3 install sphinx breathe sphinx-book-theme sphinx-copybtton
     else
         echo -e "\nBegin by installing make itself, and then look at the table below to find what other packages to install based on what commands you wish to run\n"
 
@@ -54,7 +54,7 @@ main() {
         printf "%-${col1_width}s %-${col2_width}s %-${col3_width}s\n" "create_index_rst_file" "-" "make"
         printf "%-${col1_width}s %-${col2_width}s %-${col3_width}s\n" "determine_index_rst_exists" "create_breathe_file, create_index_rst_file" "make"
         printf "%-${col1_width}s %-${col2_width}s %-${col3_width}s\n" "doxygen_complete" "change_doxygen_options" "make graphviz doxygen"
-        printf "%-${col1_width}s %-${col2_width}s %-${col3_width}s\n" "docs" "doxygen_complete, determine_index_rst_exists" "make sphinx breathe sphinx-rtd-theme"
+        printf "%-${col1_width}s %-${col2_width}s %-${col3_width}s\n" "docs" "doxygen_complete, determine_index_rst_exists" "make sphinx breathe sphinx-book-theme sphinx-copybtton"
         printf "%-${col1_width}s %-${col2_width}s %-${col3_width}s\n" "create_folders" "-" "make"
     fi
 }

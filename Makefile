@@ -59,6 +59,12 @@ DOXYGEN_GENERATE_HTML = NO
 DOXYGEN_GENERATE_LATEX = NO
 DOXYGEN_GENERATE_XML = YES
 
+SPHINX_GITHUB_USERNAME = Phaysik
+SPHINX_GITHUB_REPOSITORY = database-normalizer
+SPHINX_RST_FOLDER = rst
+SPHINX_STATIC_FOLDER = _static
+SPHINX_CSS_FOLDER = css
+
 default: compile
 
 compile: ${SOURCES}
@@ -146,15 +152,34 @@ create_breathe_file:
 	echo "from cgitb import html\n" > conf.py
 
 	echo "extensions = [\"breathe\"]\n" >> conf.py
+	echo "master_doc = \"${SPHINX_RST_FOLDER}/index\"" >> conf.py
 
-	echo "html_theme = \"sphinx_rtd_theme\"\n" >> conf.py
+	echo "html_title = \"${DOXYGEN_PROJECT_NAME}\"" >> conf.py
+	echo "html_theme = \"sphinx_book_theme\"" >> conf.py
+	echo "html_static_path = [\"docs/${SPHINX_STATIC_FOLDER}/\"]\n" >> conf.py
+
+	echo "html_css_files = [" >> conf.py
+	echo "\t\"${SPHINX_CSS_FOLDER}/custom.css\"" >> conf.py
+	echo "]\n" >> conf.py
+
+	echo  "html_theme_options = {" >> conf.py
+	echo "\t\"repository_url\": \"https://github.com/${SPHINX_GITHUB_USERNAME}/${SPHINX_GITHUB_REPOSITORY}\"," >> conf.py
+	echo "\t\"use_repository_button\": True," >> conf.py
+	echo "\t\"home_page_in_toc\": True," >> conf.py
+	echo "}\n" >> conf.py
+
+	echo "extensions = [" >> conf.py
+	echo "\t\"sphinx_copybutton\"," >> conf.py
+	echo "]\n" >> conf.py
+
+	echo "copybutton_prompt_text = \"Copy to clipboard\"\n" >> conf.py
 
 	echo "# Breathe configuration" >> conf.py
-	echo "breathe_default_project = \"testing\"" >> conf.py
+	echo "breathe_default_project = \"documentation\"" >> conf.py
 	echo "breathe_default_members = (\"members\", \"protected-members\", \"private-members\")" >> conf.py
 
 create_index_rst_file:
-	touch index.rst
+	touch ${SPHINX_RST_FOLDER}/index.rst
 	echo "My Project Documentation" >> index.rst
 	echo "========================\n" >> index.rst
 
@@ -167,7 +192,7 @@ create_index_rst_file:
 	echo ".. doxygennamespace:: testing" >> index.rst
 
 determine_index_rst_exists: create_breathe_file
-	[ -f ./index.rst ] || ${MAKE} create_index_rst_file
+	[ -f ./${SPHINX_RST_FOLDER}/index.rst ] || ${MAKE} create_index_rst_file
 
 doxygen_complete: change_doxygen_options
 	doxygen ${DOXYGEN_FILE_NAME}
@@ -175,7 +200,7 @@ doxygen_complete: change_doxygen_options
 
 docs: doxygen_complete
 	${MAKE} determine_index_rst_exists
-	sphinx-build -b html -Dbreathe_projects.testing=${DOXYGEN_OUTPUT_DIRECTORY}/xml . ${DOXYGEN_OUTPUT_DIRECTORY}/sphinx/
+	sphinx-build -b html -Dbreathe_projects.documentation=${DOXYGEN_OUTPUT_DIRECTORY}/xml . ${DOXYGEN_OUTPUT_DIRECTORY}/sphinx/
 
 create_folders:
 	mkdir -p ${SOURCE_FOLDER}
@@ -183,3 +208,7 @@ create_folders:
 	mkdir -p ${INCLUDE_FOLDER}
 	mkdir -p ${OUTPUT_FOLDER}
 	mkdir -p ${TEST_FOLDER}
+	mkdir -p ${DOXYGEN_OUTPUT_DIRECTORY}
+	mkdir -p ${SPHINX_RST_FOLDER}
+	mkdir -p ${DOXYGEN_OUTPUT_DIRECTORY}/${SPHINX_STATIC_FOLDER}
+	mkdir -p ${DOXYGEN_OUTPUT_DIRECTORY}/${SPHINX_STATIC_FOLDER}/${SPHINX_CSS_FOLDER}
