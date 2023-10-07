@@ -1,4 +1,5 @@
-/docs
+/docs/sphinx
+/docs/xml
 /coverage
 /build
 .vscode

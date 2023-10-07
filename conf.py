@@ -19,6 +19,8 @@ html_theme_options = {
 
 extensions = [
 	"sphinx_copybutton",
+	"sphinx_last_updated_by_git",
+	"notfound.extension",
 ]
 
 copybutton_prompt_text = "Copy to clipboard"

@@ -24,7 +24,7 @@ main() {
         sudo cp ./lib/libgtest*.a /usr/lib
 
         echo "Installing Sphinx and it's dependencies for documentation"
-        pip3 install sphinx breathe sphinx-book-theme sphinx-copybutton
+        pip3 install sphinx breathe sphinx-book-theme sphinx-copybutton sphinx-autobuild sphinx-last-updated-by-git sphinx-notfound-page
     else
         echo -e "\nBegin by installing make itself, and then look at the table below to find what other packages to install based on what commands you wish to run\n"
 
@@ -45,17 +45,11 @@ main() {
         printf "%-${col1_width}s %-${col2_width}s %-${col3_width}s\n" "lcov" "build_test" "make lcov"
         printf "%-${col1_width}s %-${col2_width}s %-${col3_width}s\n" "genhtml" "lcov" "make lcov"
         printf "%-${col1_width}s %-${col2_width}s %-${col3_width}s\n" "coverage" "genhtml" "make"
-        printf "%-${col1_width}s %-${col2_width}s %-${col3_width}s\n" "tidy_setup" "-" "make clang-tidy"
-        printf "%-${col1_width}s %-${col2_width}s %-${col3_width}s\n" "fix_tidy_warnings" "-" "make"
-        printf "%-${col1_width}s %-${col2_width}s %-${col3_width}s\n" "tidy" "tidy_setup, fix_tidy_warnings" "make clang-tidy"
-        printf "%-${col1_width}s %-${col2_width}s %-${col3_width}s\n" "create_doxygen" "-" "make doxygen"
-        printf "%-${col1_width}s %-${col2_width}s %-${col3_width}s\n" "change_doxygen_options" "create_doxygen" "make"
-        printf "%-${col1_width}s %-${col2_width}s %-${col3_width}s\n" "create_breathe_file" "-" "make"
-        printf "%-${col1_width}s %-${col2_width}s %-${col3_width}s\n" "create_index_rst_file" "-" "make"
-        printf "%-${col1_width}s %-${col2_width}s %-${col3_width}s\n" "determine_index_rst_exists" "create_breathe_file, create_index_rst_file" "make"
-        printf "%-${col1_width}s %-${col2_width}s %-${col3_width}s\n" "doxygen_complete" "change_doxygen_options" "make graphviz doxygen"
-        printf "%-${col1_width}s %-${col2_width}s %-${col3_width}s\n" "docs" "doxygen_complete, determine_index_rst_exists" "make sphinx breathe sphinx-book-theme sphinx-copybtton"
+        printf "%-${col1_width}s %-${col2_width}s %-${col3_width}s\n" "tidy" "-" "make clang-tidy"
+        printf "%-${col1_width}s %-${col2_width}s %-${col3_width}s\n" "run_doxygen" "-" "make graphviz doxygen"
+        printf "%-${col1_width}s %-${col2_width}s %-${col3_width}s\n" "docs" "run_doxygen" "make sphinx breathe sphinx-book-theme sphinx-copybtton sphinx-autobuild sphinx-last-updated-by-git sphinx-notfound-page"
         printf "%-${col1_width}s %-${col2_width}s %-${col3_width}s\n" "create_folders" "-" "make"
+        printf "%-${col1_width}s %-${col2_width}s %-${col3_width}s\n" "initialize_repo" "-" "make"
     fi
 }
 

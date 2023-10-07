@@ -77,6 +77,12 @@ Below is a list of all the :file:`Makefile` commands along with the other comman
     |                            |                                 | sphinx-book-theme                                                          |
     |                            |                                 |                                                                            |
     |                            |                                 | sphinx-copybutton                                                          |
+    |                            |                                 |                                                                            |
+    |                            |                                 | sphinx-autobuild                                                           |
+    |                            |                                 |                                                                            |
+    |                            |                                 | sphinx-last-updated-by-git                                                 |
+    |                            |                                 |                                                                            |
+    |                            |                                 | sphinx-notfound-page                                                       |
     +----------------------------+---------------------------------+----------------------------------------------------------------------------+
     | create_folders             | NA                              | make                                                                       |
     +----------------------------+---------------------------------+----------------------------------------------------------------------------+
