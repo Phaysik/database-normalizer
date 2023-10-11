@@ -15,8 +15,8 @@
 #include "constants.h"
 
 /*! \headerfile fileValidatorFixture.h
-    \brief A test fixture for #FileValidator
-    \details Creates a test fixture to be used in some #FileValidator tests
+    \brief A test fixture for #normalizer::file::FileValidator
+    \details Creates a test fixture to be used in some #normalizer::file::FileValidator tests
     \date 10/04/2023
     \version 1.0
     \author Matthew Moore

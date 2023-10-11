@@ -27,3 +27,19 @@ void normalizer::file::FileValidator::validateFilePath(const std::string &filePa
         throw std::filesystem::filesystem_error(normalizer::file::FILE_DOES_NOT_EXIST, filePath, std::make_error_code(std::errc::no_such_file_or_directory));
     }
 }
+
+void normalizer::file::FileValidator::validateFileOpen(const std::ifstream &file, const std::string &fileName)
+{
+    if (!file.is_open())
+    {
+        throw std::filesystem::filesystem_error(normalizer::file::FILE_DID_NOT_OPEN, fileName, std::make_error_code(std::errc::connection_refused));
+    }
+}
+
+void normalizer::file::FileValidator::validateReadFileOrCallFromDirectory(const bool directoryCalling, const bool isPathADirectory, const std::string &pathName)
+{
+    if (!directoryCalling && isPathADirectory)
+    {
+        throw std::filesystem::filesystem_error(normalizer::file::READ_DIRECTORY_NOT_FILE, pathName, std::make_error_code(std::errc::is_a_directory));
+    }
+}
