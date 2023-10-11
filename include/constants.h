@@ -21,5 +21,7 @@ namespace normalizer
         // For file validation
         const std::string DIRECTORY_DOES_NOT_EXIST = "Directory does not exist"; /*!< Error message for if the user's directory path is not valid */
         const std::string FILE_DOES_NOT_EXIST = "File does not exist";           /*!< Error message for if the user's file path is not valid */
+        const std::string FILE_DID_NOT_OPEN = "File did not open";               /*!< Error message for if the user's file does not open */
+        const std::string READ_DIRECTORY_NOT_FILE = "File did not open";         /*!< Error message for if the user tries to read a directory not a file */
     }
 }
