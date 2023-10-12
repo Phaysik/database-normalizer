@@ -8,38 +8,41 @@
 
 #include "FileManager/fileValidator.h"
 
-/* Static Functions */
-
-void normalizer::file::FileValidator::validateDirectoryPath(const std::string &directoryPath)
+namespace normalizer::file
 {
-    if (!std::filesystem::is_directory(directoryPath))
-    {
-        throw std::filesystem::filesystem_error(normalizer::file::DIRECTORY_DOES_NOT_EXIST, directoryPath, std::make_error_code(std::errc::no_such_file_or_directory));
-    }
-}
+    /* Static Functions */
 
-void normalizer::file::FileValidator::validateFilePath(const std::string &filePath)
-{
-    std::filesystem::file_status status = std::filesystem::status(filePath);
-
-    if (!std::filesystem::is_regular_file(status))
+    void FileValidator::validateDirectoryPath(const std::string &directoryPath)
     {
-        throw std::filesystem::filesystem_error(normalizer::file::FILE_DOES_NOT_EXIST, filePath, std::make_error_code(std::errc::no_such_file_or_directory));
+        if (!std::filesystem::is_directory(directoryPath))
+        {
+            throw std::filesystem::filesystem_error(DIRECTORY_DOES_NOT_EXIST, directoryPath, std::make_error_code(std::errc::no_such_file_or_directory));
+        }
     }
-}
 
-void normalizer::file::FileValidator::validateFileOpen(const std::ifstream &file, const std::string &fileName)
-{
-    if (!file.is_open())
+    void FileValidator::validateFilePath(const std::string &filePath)
     {
-        throw std::filesystem::filesystem_error(normalizer::file::FILE_DID_NOT_OPEN, fileName, std::make_error_code(std::errc::connection_refused));
-    }
-}
+        std::filesystem::file_status status = std::filesystem::status(filePath);
 
-void normalizer::file::FileValidator::validateReadFileOrCallFromDirectory(const bool directoryCalling, const bool isPathADirectory, const std::string &pathName)
-{
-    if (!directoryCalling && isPathADirectory)
-    {
-        throw std::filesystem::filesystem_error(normalizer::file::READ_DIRECTORY_NOT_FILE, pathName, std::make_error_code(std::errc::is_a_directory));
+        if (!std::filesystem::is_regular_file(status))
+        {
+            throw std::filesystem::filesystem_error(FILE_DOES_NOT_EXIST, filePath, std::make_error_code(std::errc::no_such_file_or_directory));
+        }
     }
-}
+
+    void FileValidator::validateFileOpen(const std::ifstream &file, const std::string &fileName)
+    {
+        if (!file.is_open())
+        {
+            throw std::filesystem::filesystem_error(FILE_DID_NOT_OPEN, fileName, std::make_error_code(std::errc::connection_refused));
+        }
+    }
+
+    void FileValidator::validateReadFileOrCallFromDirectory(const bool directoryCalling, const bool isPathADirectory, const std::string &pathName)
+    {
+        if (!directoryCalling && isPathADirectory)
+        {
+            throw std::filesystem::filesystem_error(READ_DIRECTORY_NOT_FILE, pathName, std::make_error_code(std::errc::is_a_directory));
+        }
+    }
+} // Namespace normalizer::file
