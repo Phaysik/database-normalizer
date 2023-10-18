@@ -9,6 +9,8 @@
 
 #include <string>
 
+#include "aliases.h"
+
 namespace normalizer
 {
     namespace file
@@ -28,5 +30,10 @@ namespace normalizer
     namespace interpreter::token
     {
         const bool TOKEN_DEBUG = false; /*!< Enable debugging for #normalizer::interpreter::token::Token */
+    }
+
+    namespace interpreter::lexer
+    {
+        const us DECIMAL_BASE = 10; /*!< The base of a standard decimal value */
     }
 }

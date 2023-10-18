@@ -33,26 +33,28 @@ namespace normalizer::interpreter::token
         T_LPAREN,
         T_RPAREN,
         T_INTCONST,
-        T_FLOATCONST,
-        T_UNKNOWN
+        T_SEMICOLON,
+        T_COMMA,
+        T_UNKNOWN,
     };
 
     static std::unordered_map<TokenConstants, std::string> tokenToString = {
-        {TokenConstants::T_IDENTIFIER, "IDENTIFIER"},
-        {TokenConstants::T_CREATE, "CREATE"},
-        {TokenConstants::T_TABLE, "TABLE"},
-        {TokenConstants::T_IF, "IF"},
-        {TokenConstants::T_NOT, "NOT"},
-        {TokenConstants::T_NULL, "NULL"},
-        {TokenConstants::T_EXISTS, "EXISTS"},
-        {TokenConstants::T_INT, "INT"},
-        {TokenConstants::T_INTEGER, "INTEGER"},
-        {TokenConstants::T_VARCHAR, "VARCHAR"},
-        {TokenConstants::T_LPAREN, "("},
-        {TokenConstants::T_RPAREN, ")"},
-        {TokenConstants::T_INTCONST, "INTCONST"},
-        {TokenConstants::T_FLOATCONST, "FLOATCONST"},
-        {TokenConstants::T_UNKNOWN, "UNKNOWN"},
+        {TokenConstants::T_IDENTIFIER, "T_IDENTIFIER"},
+        {TokenConstants::T_CREATE, "T_CREATE"},
+        {TokenConstants::T_TABLE, "T_TABLE"},
+        {TokenConstants::T_IF, "T_IF"},
+        {TokenConstants::T_NOT, "T_NOT"},
+        {TokenConstants::T_NULL, "T_NULL"},
+        {TokenConstants::T_EXISTS, "T_EXISTS"},
+        {TokenConstants::T_INT, "T_INT"},
+        {TokenConstants::T_INTEGER, "T_INTEGER"},
+        {TokenConstants::T_VARCHAR, "T_VARCHAR"},
+        {TokenConstants::T_LPAREN, "T_LPAREN"},
+        {TokenConstants::T_RPAREN, "T_RPAREN"},
+        {TokenConstants::T_INTCONST, "T_INTCONST"},
+        {TokenConstants::T_SEMICOLON, "T_SEMICOLON"},
+        {TokenConstants::T_COMMA, "T_COMMA"},
+        {TokenConstants::T_UNKNOWN, "T_UNKNOWN"},
     }; /*!< Convert a string to it's \ref normalizer::interpreter::token::Token "Token" representation */
 
     static std::unordered_map<std::string, TokenConstants> stringToToken = {
@@ -67,6 +69,8 @@ namespace normalizer::interpreter::token
         {"VARCHAR", TokenConstants::T_VARCHAR},
         {"(", TokenConstants::T_LPAREN},
         {")", TokenConstants::T_RPAREN},
+        {";", TokenConstants::T_SEMICOLON},
+        {",", TokenConstants::T_COMMA},
     }; /*!< Convert a string to it's \ref normalizer::interpreter::token::Token "Token" representation */
 
     /*! \headerfile tokenConstants.h
@@ -79,7 +83,6 @@ namespace normalizer::interpreter::token
     {
         STRING,
         INT,
-        FLOAT,
         CHAR
     };
 }
