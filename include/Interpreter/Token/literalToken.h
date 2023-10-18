@@ -28,10 +28,10 @@ namespace normalizer::interpreter::token
         /* Constructors and Destructors */
 
         /*! \brief Create a String literal token
-            \pre \p tokenType must be a valid #TokenConstants value.
+            \pre \p tokType must be a valid #TokenConstants value.
             \post Creates a #Token from the parameters
             \param[in] value The value of the token
-            \param[in] tokenType The type of the token
+            \param[in] tokType The type of the token
             \param[in] lineNum The line of the token
             \param[in] lineOffset The offset of the token in the line
             \param[in] tokLength The length of the token
@@ -39,13 +39,13 @@ namespace normalizer::interpreter::token
             \version 1.0
             \author Matthew Moore
         */
-        LiteralToken(const std::string &value, const TokenConstants &tokenType, const us lineNum, const us lineOffset, const us tokLength) : Token(TokenCategories::STRING, tokenType, value, lineNum, lineOffset, tokLength) {}
+        LiteralToken(const std::string &value, const TokenConstants &tokType, const us lineNum, const us lineOffset, const us tokLength) : Token(TokenCategories::STRING, tokType, value, lineNum, lineOffset, tokLength) {}
 
         /*! \brief Create a Character literal token
-            \pre \p tokenType must be a valid #TokenConstants value.
+            \pre \p tokType must be a valid #TokenConstants value.
             \post Creates a #Token from the parameters
             \param[in] value The value of the token
-            \param[in] tokenType The type of the token
+            \param[in] tokType The type of the token
             \param[in] lineNum The line of the token
             \param[in] lineOffset The offset of the token in the line
             \param[in] tokLength The length of the token
@@ -53,7 +53,7 @@ namespace normalizer::interpreter::token
             \version 1.0
             \author Matthew Moore
         */
-        LiteralToken(const char value, const TokenConstants &tokenType, const us lineNum, const us lineOffset, const us tokLength) : Token(TokenCategories::CHAR, tokenType, std::string(1, value), lineNum, lineOffset, tokLength) {}
+        LiteralToken(const char value, const TokenConstants &tokType, const us lineNum, const us lineOffset, const us tokLength) : Token(TokenCategories::CHAR, tokType, std::string(1, value), lineNum, lineOffset, tokLength) {}
 
         /*! \brief Create an Integer literal token
             \post Creates a #Token from the parameters
@@ -65,18 +65,6 @@ namespace normalizer::interpreter::token
             \version 1.0
             \author Matthew Moore
         */
-        LiteralToken(const ui value, const us lineNum, const us lineOffset, const us tokLength) : Token(TokenCategories::STRING, TokenConstants::T_INTCONST, std::to_string(value), lineNum, lineOffset, tokLength) {}
-
-        /*! \brief Create an Float literal token
-            \post Creates a #Token from the parameters
-            \param[in] value The value of the token
-            \param[in] lineNum The line of the token
-            \param[in] lineOffset The offset of the token in the line
-            \param[in] tokLength The length of the token
-            \date 10/11/2023
-            \version 1.0
-            \author Matthew Moore
-        */
-        LiteralToken(const float value, const us lineNum, const us lineOffset, const us tokLength) : Token(TokenCategories::STRING, TokenConstants::T_FLOATCONST, std::to_string(value), lineNum, lineOffset, tokLength) {}
+        LiteralToken(const ul value, const us lineNum, const us lineOffset, const us tokLength) : Token(TokenCategories::STRING, TokenConstants::T_INTCONST, std::to_string(value), lineNum, lineOffset, tokLength) {}
     };
 }
