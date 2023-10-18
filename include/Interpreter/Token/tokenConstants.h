@@ -35,6 +35,10 @@ namespace normalizer::interpreter::token
         T_INTCONST,
         T_SEMICOLON,
         T_COMMA,
+        T_KEY,
+        T_COLON,
+        T_DASH,
+        T_RANGLE,
         T_UNKNOWN,
     };
 
@@ -54,6 +58,10 @@ namespace normalizer::interpreter::token
         {TokenConstants::T_INTCONST, "T_INTCONST"},
         {TokenConstants::T_SEMICOLON, "T_SEMICOLON"},
         {TokenConstants::T_COMMA, "T_COMMA"},
+        {TokenConstants::T_KEY, "T_KEY"},
+        {TokenConstants::T_COLON, "T_COLON"},
+        {TokenConstants::T_DASH, "T_DASH"},
+        {TokenConstants::T_RANGLE, "T_RANGLE"},
         {TokenConstants::T_UNKNOWN, "T_UNKNOWN"},
     }; /*!< Convert a string to it's \ref normalizer::interpreter::token::Token "Token" representation */
 
@@ -71,6 +79,10 @@ namespace normalizer::interpreter::token
         {")", TokenConstants::T_RPAREN},
         {";", TokenConstants::T_SEMICOLON},
         {",", TokenConstants::T_COMMA},
+        {"KEY", TokenConstants::T_KEY},
+        {":", TokenConstants::T_COLON},
+        {"-", TokenConstants::T_DASH},
+        {">", TokenConstants::T_RANGLE},
     }; /*!< Convert a string to it's \ref normalizer::interpreter::token::Token "Token" representation */
 
     /*! \headerfile tokenConstants.h

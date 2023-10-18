@@ -108,6 +108,15 @@ namespace normalizer::interpreter::lexer
         */
         normalizer::interpreter::token::LiteralToken eatNumericLiteral();
 
+        /*! \brief Checks if a new character can be grabbed
+            \details Checks if #characterIndex is less than the length of #textContent
+            \date 10/18/2023
+            \version 1.0
+            \author Matthew Moore
+            \return bool If a new character can be grabbed
+        */
+        bool canGrabNewChar();
+
         /* Static Functions */
 
         /*! \brief Converts a character to their lowercase form
