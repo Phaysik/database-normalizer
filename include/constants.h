@@ -24,4 +24,9 @@ namespace normalizer
         const std::string FILE_DID_NOT_OPEN = "File did not open";               /*!< Error message for if the user's file does not open */
         const std::string READ_DIRECTORY_NOT_FILE = "File did not open";         /*!< Error message for if the user tries to read a directory not a file */
     }
+
+    namespace interpreter::token
+    {
+        const bool TOKEN_DEBUG = false; /*!< Enable debugging for #normalizer::interpreter::token::Token */
+    }
 }

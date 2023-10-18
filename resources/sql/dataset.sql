@@ -1,4 +1,4 @@
 CREATE TABLE IF NOT EXISTS TESTING (
-    test_id INTEGER,
-    help VARCHAR(255) NOT NULL,
+    test_id INTEGER(4),
+    help VARCHAR(255) NOT NULL
 );

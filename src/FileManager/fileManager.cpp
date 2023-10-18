@@ -8,77 +8,85 @@
 
 #include "FileManager/fileManager.h"
 
-/* Constructors and Destructors */
-
-normalizer::file::FileManager::FileManager(const std::string &path, const bool isDirectory)
+namespace normalizer::file
 {
-    if (isDirectory)
+    /* Constructors and Destructors */
+
+    FileManager::FileManager(const std::string &path, const bool isDirectory)
     {
-        normalizer::file::FileValidator::validateDirectoryPath(path);
-    }
-    else
-    {
-        normalizer::file::FileValidator::validateFilePath(path);
-    }
+        if (isDirectory)
+        {
+            FileValidator::validateDirectoryPath(path);
+        }
+        else
+        {
+            FileValidator::validateFilePath(path);
+        }
 
-    this->fOrdPath = path;
-    this->isPathADirectory = isDirectory;
-}
-
-/* Getters and Setters */
-
-std::string normalizer::file::FileManager::getFOrdPath() const
-{
-    return this->fOrdPath;
-}
-
-bool normalizer::file::FileManager::getIsPathADirectory() const
-{
-    return this->isPathADirectory;
-}
-
-/* Member Functions */
-
-std::string normalizer::file::FileManager::grabFileContents(const bool directoryCalling, const std::string &filePath) const
-{
-    const std::string fileToRead = (filePath != "") ? filePath : this->fOrdPath;
-
-    normalizer::file::FileValidator::validateReadFileOrCallFromDirectory(directoryCalling, this->isPathADirectory, fileToRead);
-
-    std::ifstream inputFile(fileToRead);
-
-    normalizer::file::FileValidator::validateFileOpen(inputFile, fileToRead);
-
-    std::string fileContents = "";
-
-    std::string line = "";
-
-    while (std::getline(inputFile, line))
-    {
-        fileContents += line;
-        fileContents += "\n";
+        this->fOrdPath = path;
+        this->isPathADirectory = isDirectory;
     }
 
-    inputFile.close();
+    /* Getters and Setters */
 
-    // Substring the final '\n' off
-    return fileContents.substr(0, fileContents.length() - 1);
-}
-
-std::vector<std::string> normalizer::file::FileManager::grabDirectoryFileContents() const
-{
-    normalizer::file::FileValidator::validateDirectoryPath(this->fOrdPath);
-
-    std::vector<std::string> directoryFileContents;
-
-    for (const auto &entry : std::filesystem::directory_iterator(this->fOrdPath))
+    std::string FileManager::getFOrdPath() const
     {
-        normalizer::file::FileValidator::validateFilePath(entry.path());
-
-        const std::string intermediateFileContents = this->grabFileContents(true, entry.path());
-
-        directoryFileContents.push_back(intermediateFileContents);
+        return this->fOrdPath;
     }
 
-    return directoryFileContents;
-}
+    bool FileManager::getIsPathADirectory() const
+    {
+        return this->isPathADirectory;
+    }
+
+    /* Member Functions */
+
+    std::string FileManager::grabFileContents(const bool directoryCalling, const std::string &filePath) const
+    {
+        const std::string fileToRead = !filePath.empty() ? filePath : this->fOrdPath;
+
+        FileValidator::validateReadFileOrCallFromDirectory(directoryCalling, this->isPathADirectory, fileToRead);
+
+        std::ifstream inputFile(fileToRead);
+
+        FileValidator::validateFileOpen(inputFile, fileToRead);
+
+        std::string fileContents;
+
+        std::string line;
+
+        while (true)
+        {
+            if (!std::getline(inputFile, line))
+            {
+                break;
+            }
+
+            fileContents += line;
+            fileContents += "\n";
+        }
+
+        inputFile.close();
+
+        // Substring the final '\n' off
+        return fileContents.substr(0, fileContents.length() - 1);
+    }
+
+    std::vector<std::string> FileManager::grabDirectoryFileContents() const
+    {
+        FileValidator::validateDirectoryPath(this->fOrdPath);
+
+        std::vector<std::string> directoryFileContents;
+
+        for (const auto &entry : std::filesystem::directory_iterator(this->fOrdPath))
+        {
+            FileValidator::validateFilePath(entry.path());
+
+            const std::string intermediateFileContents = this->grabFileContents(true, entry.path());
+
+            directoryFileContents.push_back(intermediateFileContents);
+        }
+
+        return directoryFileContents;
+    }
+} // Namespace normalizer::file
