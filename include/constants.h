@@ -36,4 +36,9 @@ namespace normalizer
     {
         const us DECIMAL_BASE = 10; /*!< The base of a standard decimal value */
     }
+
+    namespace interpreter::parser
+    {
+        const us ERROR_WHAT_SIZE = 11; /*!< The length of the what() prefix message from thrown error msssages */
+    }
 }
