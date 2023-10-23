@@ -20,41 +20,49 @@ namespace normalizer::interpreter::token
     */
     enum class TokenConstants
     {
-        T_IDENTIFIER,
-        T_CREATE,
-        T_TABLE,
-        T_IF,
-        T_NOT,
-        T_NULL,
-        T_EXISTS,
-        T_INT,
-        T_INTEGER,
-        T_VARCHAR,
-        T_LPAREN,
-        T_RPAREN,
-        T_INTCONST,
-        T_SEMICOLON,
-        T_COMMA,
-        T_UNKNOWN,
+        T_IDENTIFIER, /*!< Indentifiers */
+        T_CREATE,     /*!< CREATE */
+        T_TABLE,      /*!< TABLE */
+        T_IF,         /*!< IF */
+        T_NOT,        /*!< NOT */
+        T_NULL,       /*!< NULL */
+        T_EXISTS,     /*!< EXISTS */
+        T_INT,        /*!< INT */
+        T_INTEGER,    /*!< INTEGER */
+        T_VARCHAR,    /*!< VARCHAR */
+        T_LPAREN,     /*!< ( */
+        T_RPAREN,     /*!< ) */
+        T_INTCONST,   /*!< INTEGER VALUE */
+        T_SEMICOLON,  /*!< ; */
+        T_COMMA,      /*!< , */
+        T_KEY,        /*!< KEY */
+        T_COLON,      /*!< : */
+        T_DASH,       /*!< - */
+        T_RANGLE,     /*!< > */
+        T_UNKNOWN,    /*!< UNKNOWN */
     };
 
     static std::unordered_map<TokenConstants, std::string> tokenToString = {
-        {TokenConstants::T_IDENTIFIER, "T_IDENTIFIER"},
-        {TokenConstants::T_CREATE, "T_CREATE"},
-        {TokenConstants::T_TABLE, "T_TABLE"},
-        {TokenConstants::T_IF, "T_IF"},
-        {TokenConstants::T_NOT, "T_NOT"},
-        {TokenConstants::T_NULL, "T_NULL"},
-        {TokenConstants::T_EXISTS, "T_EXISTS"},
-        {TokenConstants::T_INT, "T_INT"},
-        {TokenConstants::T_INTEGER, "T_INTEGER"},
-        {TokenConstants::T_VARCHAR, "T_VARCHAR"},
-        {TokenConstants::T_LPAREN, "T_LPAREN"},
-        {TokenConstants::T_RPAREN, "T_RPAREN"},
-        {TokenConstants::T_INTCONST, "T_INTCONST"},
-        {TokenConstants::T_SEMICOLON, "T_SEMICOLON"},
-        {TokenConstants::T_COMMA, "T_COMMA"},
-        {TokenConstants::T_UNKNOWN, "T_UNKNOWN"},
+        {TokenConstants::T_IDENTIFIER, "IDENTIFIER"},
+        {TokenConstants::T_CREATE, "CREATE"},
+        {TokenConstants::T_TABLE, "TABLE"},
+        {TokenConstants::T_IF, "IF"},
+        {TokenConstants::T_NOT, "NOT"},
+        {TokenConstants::T_NULL, "NULL"},
+        {TokenConstants::T_EXISTS, "EXISTS"},
+        {TokenConstants::T_INT, "INT"},
+        {TokenConstants::T_INTEGER, "INTEGER"},
+        {TokenConstants::T_VARCHAR, "VARCHAR"},
+        {TokenConstants::T_LPAREN, "LPAREN"},
+        {TokenConstants::T_RPAREN, "RPAREN"},
+        {TokenConstants::T_INTCONST, "INTCONST"},
+        {TokenConstants::T_SEMICOLON, "SEMICOLON"},
+        {TokenConstants::T_COMMA, "COMMA"},
+        {TokenConstants::T_KEY, "KEY"},
+        {TokenConstants::T_COLON, "COLON"},
+        {TokenConstants::T_DASH, "DASH"},
+        {TokenConstants::T_RANGLE, "RANGLE"},
+        {TokenConstants::T_UNKNOWN, "UNKNOWN"},
     }; /*!< Convert a string to it's \ref normalizer::interpreter::token::Token "Token" representation */
 
     static std::unordered_map<std::string, TokenConstants> stringToToken = {
@@ -71,6 +79,10 @@ namespace normalizer::interpreter::token
         {")", TokenConstants::T_RPAREN},
         {";", TokenConstants::T_SEMICOLON},
         {",", TokenConstants::T_COMMA},
+        {"KEY", TokenConstants::T_KEY},
+        {":", TokenConstants::T_COLON},
+        {"-", TokenConstants::T_DASH},
+        {">", TokenConstants::T_RANGLE},
     }; /*!< Convert a string to it's \ref normalizer::interpreter::token::Token "Token" representation */
 
     /*! \headerfile tokenConstants.h

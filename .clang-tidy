@@ -1,5 +1,5 @@
 ---
-Checks: 'clang-diagnostic-*,clang-analyzer-*,*,-llvmlibc-callee-namespace,-llvmlibc-implementation-in-namespace,-modernize-use-trailing-return-type,-fuchsia-default-arguments-calls,-fuchsia-overloaded-operator,-altera-unroll-loops'
+Checks: 'clang-diagnostic-*,clang-analyzer-*,*,-llvmlibc-callee-namespace,-llvmlibc-implementation-in-namespace,-modernize-use-trailing-return-type,-fuchsia-default-arguments-calls,-fuchsia-overloaded-operator,-altera-unroll-loops,-bugprone-easily-swappable-parameters'
 WarningsAsErrors: ''
 HeaderFilterRegex: ''
 AnalyzeTemporaryDtors: false

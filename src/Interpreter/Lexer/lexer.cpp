@@ -25,7 +25,7 @@ namespace normalizer::interpreter
 
             if (currentValue == '\n' || currentValue == '\r')
             {
-                bool isWindowsMachine = this->characterIndex < this->textContent.length(); // Checks to see if the file ends in CRLF (Windows)
+                bool isWindowsMachine = this->canGrabNewChar(); // Checks to see if the file ends in CRLF (Windows)
 
                 if (currentValue == '\r' && isWindowsMachine && this->textContent[this->characterIndex] == '\n') // Checks for CR and then LF characters
                 {
@@ -107,6 +107,11 @@ namespace normalizer::interpreter
             }
         }
 
+        bool lexer::Lexer::canGrabNewChar()
+        {
+            return this->characterIndex < this->textContent.length();
+        }
+
         /* Static Functions */
 
         char Lexer::lowerCharacter(const char character)
@@ -123,10 +128,11 @@ namespace normalizer::interpreter
         {
             this->eatWhitespace();
 
-            while (this->characterIndex < this->textContent.length())
+            while (this->canGrabNewChar())
             {
                 tokens.push_back(this->tokenize());
-                if (this->characterIndex < this->textContent.length())
+
+                if (this->canGrabNewChar())
                 {
                     this->eatWhitespace();
                 }
@@ -156,6 +162,10 @@ namespace normalizer::interpreter
                 return {currentValue, token::TokenConstants::T_SEMICOLON, this->lineNumber, this->lineOffset, 1};
             case ',':
                 return {currentValue, token::TokenConstants::T_COMMA, this->lineNumber, this->lineOffset, 1};
+            case '-':
+                return {currentValue, token::TokenConstants::T_DASH, this->lineNumber, this->lineOffset, 1};
+            case '>':
+                return {currentValue, token::TokenConstants::T_RANGLE, this->lineNumber, this->lineOffset, 1};
             case 'a': // ASCII latin a-z and _
             case 'b':
             case 'c':
@@ -211,19 +221,33 @@ namespace normalizer::interpreter
 
         std::regex alphaRegex("[a-z_]");
 
+        bool regexFailed = false;
+
         while (true)
         {
             if (!(std::regex_match(std::string(1, lowerCharacter), alphaRegex)))
             {
+                regexFailed = true;
                 break;
             }
 
             trueValue += trueCharacter;
-            trueCharacter = this->nextChar();
-            lowerCharacter = Lexer::lowerCharacter(trueCharacter);
+
+            if (this->canGrabNewChar())
+            {
+                trueCharacter = this->nextChar();
+                lowerCharacter = Lexer::lowerCharacter(trueCharacter);
+            }
+            else
+            {
+                break;
+            }
         }
 
-        this->putBackChar(); // To remove the last grabbed character that was not a-z
+        if (this->canGrabNewChar() || regexFailed)
+        {
+            this->putBackChar(); // To remove the last grabbed character that was not a-z
+        }
 
         std::string casedValue = trueValue;
 
@@ -248,18 +272,32 @@ namespace normalizer::interpreter
 
         std::regex numberRegex("[0-9]");
 
+        bool regexFailed = false;
+
         while (true)
         {
             if (!(std::regex_match(std::string(1, trueCharacter), numberRegex)))
             {
+                regexFailed = true;
                 break;
             }
 
             trueValue += trueCharacter;
-            trueCharacter = this->nextChar();
+
+            if (this->canGrabNewChar())
+            {
+                trueCharacter = this->nextChar();
+            }
+            else
+            {
+                break;
+            }
         }
 
-        this->putBackChar(); // To remove the last grabbed character that was not 0-9
+        if (this->canGrabNewChar() || regexFailed)
+        {
+            this->putBackChar(); // To remove the last grabbed character that was not 0-9
+        }
 
         ul parsedValue = std::strtoul(trueValue.c_str(), nullptr, lexer::DECIMAL_BASE); // Convert it to an unsigned long
 
