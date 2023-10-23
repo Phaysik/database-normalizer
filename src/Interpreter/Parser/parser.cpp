@@ -222,6 +222,7 @@ namespace normalizer::interpreter
 
                 switch (currentToken.getTokenType())
                 {
+                case token::TokenConstants::T_INT:
                 case token::TokenConstants::T_INTEGER:
                     this->parseIntegerToken();
                     break;
@@ -277,7 +278,9 @@ namespace normalizer::interpreter
             ParserValidator::throwUknownToken(currentToken, this->splitTextContent[currentToken.getLineNumber()]);
             break;
         default:
-            ParserValidator::throwUnexpectedToken(currentToken, this->splitTextContent[currentToken.getLineNumber()], "[(min_display_width)]");
+            this->goBackToPreviousToken();
+            this->parseGenericColumnDefinitions();
+            // ParserValidator::throwUnexpectedToken(currentToken, this->splitTextContent[currentToken.getLineNumber()], "[(min_display_width)]");
             break;
         }
     }
@@ -338,6 +341,7 @@ namespace normalizer::interpreter
 
         switch (currentToken.getTokenType())
         {
+        case token::TokenConstants::T_RPAREN:
         case token::TokenConstants::T_COMMA:
             this->goBackToPreviousToken(); // Backtrack to last token as there are no optional tokens
             return;
