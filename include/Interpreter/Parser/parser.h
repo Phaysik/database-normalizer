@@ -132,6 +132,41 @@ namespace normalizer::interpreter::parser
         */
         void parseGenericColumnDefinitions();
 
+        /*! \brief Parses the dependencies of the table
+            \date 10/26/2023
+            \version 1.0
+            \author Matthew Moore
+        */
+        void parseDependencies();
+
+        /*! \brief Parses multi valued dependency
+            \date 10/26/2023
+            \version 1.0
+            \author Matthew Moore
+        */
+        void parseMultiValuedDependencies();
+
+        /*! \brief Parses multiple dependent columns
+            \date 10/26/2023
+            \version 1.0
+            \author Matthew Moore
+        */
+        void parseMultipleDependentColumns();
+
+        /*! \brief Parses the primary key of the table
+            \date 10/26/2023
+            \version 1.0
+            \author Matthew Moore
+        */
+        void parseKey();
+
+        /*! \brief Parses the multiple primary keys of the table
+            \date 10/26/2023
+            \version 1.0
+            \author Matthew Moore
+        */
+        void parseMultiplePrimaryKeys();
+
         us tokensIndex;                                                   /*!< The index of #tokens */
         std::vector<normalizer::interpreter::token::LiteralToken> tokens; /*!< The list of tokens from \ref normalizer::interpreter::lexer::Lexer::grabAllTokens "Lexer::grabAllTokens()" */
         std::vector<std::string> splitTextContent;                        /*!< The text content split on newlines for easier error printing */

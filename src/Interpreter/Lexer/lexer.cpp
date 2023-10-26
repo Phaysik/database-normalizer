@@ -160,6 +160,8 @@ namespace normalizer::interpreter
                 return {currentValue, token::TokenConstants::T_RPAREN, this->lineNumber, this->lineOffset, 1};
             case ';':
                 return {currentValue, token::TokenConstants::T_SEMICOLON, this->lineNumber, this->lineOffset, 1};
+            case ':':
+                return {currentValue, token::TokenConstants::T_COLON, this->lineNumber, this->lineOffset, 1};
             case ',':
                 return {currentValue, token::TokenConstants::T_COMMA, this->lineNumber, this->lineOffset, 1};
             case '-':

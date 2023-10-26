@@ -52,13 +52,17 @@ namespace normalizer::interpreter
             case token::TokenConstants::T_CREATE:
                 this->parseCreateStatement();
                 break;
+            case token::TokenConstants::T_IDENTIFIER: // For parsing dependencies
+                this->parseDependencies();
+                break;
+            case token::TokenConstants::T_KEY: // For parsing the primary key of the dependencies
+                this->parseKey();
+                break;
             default:
                 // Don't need to specify T_UNKNOWN as a case here as default will catch it
                 ParserValidator::throwUknownToken(currentToken, this->splitTextContent[currentToken.getLineNumber()]);
                 break;
             }
-
-            break;
         }
     }
 
@@ -277,10 +281,9 @@ namespace normalizer::interpreter
         case token::TokenConstants::T_UNKNOWN:
             ParserValidator::throwUknownToken(currentToken, this->splitTextContent[currentToken.getLineNumber()]);
             break;
-        default:
+        default: // No optional parameters
             this->goBackToPreviousToken();
             this->parseGenericColumnDefinitions();
-            // ParserValidator::throwUnexpectedToken(currentToken, this->splitTextContent[currentToken.getLineNumber()], "[(min_display_width)]");
             break;
         }
     }
@@ -370,4 +373,180 @@ namespace normalizer::interpreter
         }
     }
 
+    void parser::Parser::parseDependencies()
+    {
+        token::LiteralToken currentToken = this->getNextToken();
+
+        switch (currentToken.getTokenType())
+        {
+        case token::TokenConstants::T_DASH:
+            currentToken = this->getNextToken();
+
+            switch (currentToken.getTokenType())
+            {
+            case token::TokenConstants::T_RANGLE:
+                this->parseMultiValuedDependencies();
+                break;
+            case token::TokenConstants::T_UNKNOWN:
+                ParserValidator::throwUknownToken(currentToken, this->splitTextContent[currentToken.getLineNumber()]);
+                break;
+            default:
+                ParserValidator::throwUnexpectedToken(currentToken, this->splitTextContent[currentToken.getLineNumber()], ">[>]");
+                break;
+            }
+
+            break;
+        case token::TokenConstants::T_UNKNOWN:
+            ParserValidator::throwUknownToken(currentToken, this->splitTextContent[currentToken.getLineNumber()]);
+            break;
+        default:
+            ParserValidator::throwUnexpectedToken(currentToken, this->splitTextContent[currentToken.getLineNumber()], "-");
+            break;
+        }
+    }
+
+    void parser::Parser::parseMultiValuedDependencies()
+    {
+        token::LiteralToken currentToken = this->getNextToken();
+
+        switch (currentToken.getTokenType())
+        {
+        case token::TokenConstants::T_RANGLE:
+            currentToken = this->getNextToken();
+
+            switch (currentToken.getTokenType())
+            {
+            case token::TokenConstants::T_IDENTIFIER:
+                break;
+            case token::TokenConstants::T_LPAREN: // Multiple dependent columns
+                this->parseMultipleDependentColumns();
+                break;
+            case token::TokenConstants::T_UNKNOWN:
+                ParserValidator::throwUknownToken(currentToken, this->splitTextContent[currentToken.getLineNumber()]);
+                break;
+            default:
+                ParserValidator::throwUnexpectedToken(currentToken, this->splitTextContent[currentToken.getLineNumber()], "[(] or dependent_column");
+                break;
+            }
+
+            break;
+        case token::TokenConstants::T_IDENTIFIER: // If no multi value dependency
+            break;
+        case token::TokenConstants::T_LPAREN: // Multiple dependent columns
+            this->parseMultipleDependentColumns();
+            break;
+        case token::TokenConstants::T_UNKNOWN:
+            ParserValidator::throwUknownToken(currentToken, this->splitTextContent[currentToken.getLineNumber()]);
+            break;
+        default:
+            ParserValidator::throwUnexpectedToken(currentToken, this->splitTextContent[currentToken.getLineNumber()], "[>], [(], or dependent_column");
+            break;
+        }
+    }
+
+    void parser::Parser::parseMultipleDependentColumns()
+    {
+        while (true)
+        {
+            token::LiteralToken currentToken = this->getNextToken();
+
+            switch (currentToken.getTokenType())
+            {
+            case token::TokenConstants::T_IDENTIFIER:
+                break;
+            case token::TokenConstants::T_UNKNOWN:
+                ParserValidator::throwUknownToken(currentToken, this->splitTextContent[currentToken.getLineNumber()]);
+                break;
+            default:
+                ParserValidator::throwUnexpectedToken(currentToken, this->splitTextContent[currentToken.getLineNumber()], "dependent_column");
+                break;
+            }
+
+            currentToken = this->getNextToken();
+
+            switch (currentToken.getTokenType())
+            {
+            case token::TokenConstants::T_COMMA:
+                break;
+            case token::TokenConstants::T_RPAREN:
+                return;
+            case token::TokenConstants::T_UNKNOWN:
+                ParserValidator::throwUknownToken(currentToken, this->splitTextContent[currentToken.getLineNumber()]);
+                break;
+            default:
+                ParserValidator::throwUnexpectedToken(currentToken, this->splitTextContent[currentToken.getLineNumber()], ", or )");
+                break;
+            }
+        }
+    }
+
+    void parser::Parser::parseKey()
+    {
+        token::LiteralToken currentToken = this->getNextToken();
+
+        switch (currentToken.getTokenType())
+        {
+        case token::TokenConstants::T_COLON:
+            currentToken = this->getNextToken();
+
+            switch (currentToken.getTokenType())
+            {
+            case token::TokenConstants::T_IDENTIFIER:
+                break;
+            case token::TokenConstants::T_LPAREN:
+                this->parseMultiplePrimaryKeys();
+                break;
+            case token::TokenConstants::T_UNKNOWN:
+                ParserValidator::throwUknownToken(currentToken, this->splitTextContent[currentToken.getLineNumber()]);
+                break;
+            default:
+                ParserValidator::throwUnexpectedToken(currentToken, this->splitTextContent[currentToken.getLineNumber()], "[(] or primary_key");
+                break;
+            }
+
+            break;
+        case token::TokenConstants::T_UNKNOWN:
+            ParserValidator::throwUknownToken(currentToken, this->splitTextContent[currentToken.getLineNumber()]);
+            break;
+        default:
+            ParserValidator::throwUnexpectedToken(currentToken, this->splitTextContent[currentToken.getLineNumber()], ":");
+            break;
+        }
+    }
+
+    void parser::Parser::parseMultiplePrimaryKeys()
+    {
+        while (true)
+        {
+            token::LiteralToken currentToken = this->getNextToken();
+
+            switch (currentToken.getTokenType())
+            {
+            case token::TokenConstants::T_IDENTIFIER:
+                break;
+            case token::TokenConstants::T_UNKNOWN:
+                ParserValidator::throwUknownToken(currentToken, this->splitTextContent[currentToken.getLineNumber()]);
+                break;
+            default:
+                ParserValidator::throwUnexpectedToken(currentToken, this->splitTextContent[currentToken.getLineNumber()], "primary_key");
+                break;
+            }
+
+            currentToken = this->getNextToken();
+
+            switch (currentToken.getTokenType())
+            {
+            case token::TokenConstants::T_COMMA:
+                break;
+            case token::TokenConstants::T_RPAREN:
+                return;
+            case token::TokenConstants::T_UNKNOWN:
+                ParserValidator::throwUknownToken(currentToken, this->splitTextContent[currentToken.getLineNumber()]);
+                break;
+            default:
+                ParserValidator::throwUnexpectedToken(currentToken, this->splitTextContent[currentToken.getLineNumber()], ", or )");
+                break;
+            }
+        }
+    }
 } // Namespace normalizer::interpreter
