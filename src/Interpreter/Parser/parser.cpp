@@ -39,6 +39,13 @@ namespace normalizer::interpreter
         this->splitTextContent.push_back(lineContent); // After last \n add the remainig line
     }
 
+    /* Getters and Setters */
+
+    normalizer::table::Table parser::Parser::getTable() const
+    {
+        return this->table;
+    }
+
     /* Member Functions */
 
     void parser::Parser::parse()
@@ -121,9 +128,12 @@ namespace normalizer::interpreter
                 case token::TokenConstants::T_EXISTS:
                     currentToken = this->getNextToken();
 
+                    this->table.setIfNotExists(true);
+
                     switch (currentToken.getTokenType())
                     {
                     case token::TokenConstants::T_IDENTIFIER:
+                        this->table.setTableName(currentToken.getTokenValue());
                         this->parseTableBody();
                         break;
                     case token::TokenConstants::T_UNKNOWN:
@@ -154,6 +164,7 @@ namespace normalizer::interpreter
 
             break;
         case token::TokenConstants::T_IDENTIFIER:
+            this->table.setTableName(currentToken.getTokenValue());
             this->parseTableBody();
             break;
         case token::TokenConstants::T_UNKNOWN:
@@ -219,18 +230,31 @@ namespace normalizer::interpreter
         {
             token::LiteralToken currentToken = this->getNextToken();
 
+            this->currentRowDefinition.defaultValues();
+
+            std::string rowName;
+
             switch (currentToken.getTokenType())
             {
             case token::TokenConstants::T_IDENTIFIER:
+                rowName = currentToken.getTokenValue();
+
+                ParserValidator::validateRowNameDoesntExist(currentToken, this->splitTextContent[currentToken.getLineNumber()], this->table, rowName);
+
                 currentToken = this->getNextToken();
 
                 switch (currentToken.getTokenType())
                 {
                 case token::TokenConstants::T_INT:
+                    this->currentRowDefinition.setDataType(token::tokenToString[token::TokenConstants::T_INT]);
+                    this->parseIntegerToken();
+                    break;
                 case token::TokenConstants::T_INTEGER:
+                    this->currentRowDefinition.setDataType(token::tokenToString[token::TokenConstants::T_INTEGER]);
                     this->parseIntegerToken();
                     break;
                 case token::TokenConstants::T_VARCHAR:
+                    this->currentRowDefinition.setDataType(token::tokenToString[token::TokenConstants::T_VARCHAR]);
                     this->parseVarcharToken();
                     break;
                 case token::TokenConstants::T_UNKNOWN:
@@ -255,8 +279,10 @@ namespace normalizer::interpreter
             switch (currentToken.getTokenType())
             {
             case token::TokenConstants::T_COMMA:
+                this->table.addTableRow({rowName, this->currentRowDefinition});
                 break;
             case token::TokenConstants::T_RPAREN:
+                this->table.addTableRow({rowName, this->currentRowDefinition});
                 return;
             case token::TokenConstants::T_UNKNOWN:
                 ParserValidator::throwUknownToken(currentToken, this->splitTextContent[currentToken.getLineNumber()]);
@@ -314,6 +340,8 @@ namespace normalizer::interpreter
         switch (currentToken.getTokenType())
         {
         case token::TokenConstants::T_INTCONST:
+            this->currentRowDefinition.setSize(std::strtol(currentToken.getTokenValue().c_str(), nullptr, normalizer::DECIMAL_BASE));
+
             currentToken = this->getNextToken();
 
             switch (currentToken.getTokenType())
@@ -354,6 +382,7 @@ namespace normalizer::interpreter
             switch (currentToken.getTokenType())
             {
             case token::TokenConstants::T_NULL:
+                this->currentRowDefinition.setNullable(false);
                 break;
             case token::TokenConstants::T_UNKNOWN:
                 ParserValidator::throwUknownToken(currentToken, this->splitTextContent[currentToken.getLineNumber()]);
@@ -364,11 +393,14 @@ namespace normalizer::interpreter
             }
 
             break;
+        case token::TokenConstants::T_NULL:
+            this->currentRowDefinition.setNullable(true);
+            break;
         case token::TokenConstants::T_UNKNOWN:
             ParserValidator::throwUknownToken(currentToken, this->splitTextContent[currentToken.getLineNumber()]);
             break;
         default:
-            ParserValidator::throwUnexpectedToken(currentToken, this->splitTextContent[currentToken.getLineNumber()], "[NOT NULL]");
+            ParserValidator::throwUnexpectedToken(currentToken, this->splitTextContent[currentToken.getLineNumber()], "[NOT NULL | NULL]");
             break;
         }
     }

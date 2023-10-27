@@ -14,7 +14,8 @@
 #include "aliases.h"
 #include "constants.h"
 #include "Interpreter/Token/literalToken.h"
-
+#include "Table/table.h"
+#include "Table/TableRow/tableRow.h"
 namespace normalizer::interpreter::parser
 {
     /*! \headerfile parserValidator.h
@@ -66,6 +67,18 @@ namespace normalizer::interpreter::parser
             \author Matthew Moore
         */
         [[noreturn]] static void throwUnexpectedToken(const normalizer::interpreter::token::LiteralToken &token, const std::string &textLine, const std::string &expectedTokenValue);
+
+        /*! \brief Determines if \p rowName is already in \p table
+            \post The program may throw an error depending on it \p rowName is already in \p table
+            \param[in] token The potentially duplicated row name
+            \param[in] textLine The line of the text where \p token was
+            \param[in] table The table to look through
+            \param[in] rowName The row name to validate
+            \date 10/26/2023
+            \version 1.0
+            \author Matthew Moore
+        */
+        static void validateRowNameDoesntExist(const normalizer::interpreter::token::LiteralToken &token, const std::string &textLine, const normalizer::table::Table &table, const std::string &rowName);
 
     private:
         /* Static Functions */

@@ -17,6 +17,9 @@
 #include "Interpreter/Token/literalToken.h"
 #include "Interpreter/Token/tokenConstants.h"
 #include "Interpreter/Parser/parserValidator.h"
+#include "Table/TableRow/RowDefinition/genericRowDefinition.h"
+#include "Table/TableRow/tableRow.h"
+#include "Table/table.h"
 
 namespace normalizer::interpreter::parser
 {
@@ -39,6 +42,23 @@ namespace normalizer::interpreter::parser
             \author Matthew Moore
         */
         Parser(const std::string &textContent);
+
+        /*! \brief The default destructor
+            \date 10/26/2023
+            \version 1.0
+            \author Matthew Moore
+        */
+        ~Parser() {}
+
+        /* Getters and Setters */
+
+        /*! \brief Get the parsed table
+            \date 10/26/2023
+            \version 1.0
+            \author Matthew Moore
+            \return Table The parsed table
+        */
+        normalizer::table::Table getTable() const;
 
         /* Member Functions */
 
@@ -167,8 +187,10 @@ namespace normalizer::interpreter::parser
         */
         void parseMultiplePrimaryKeys();
 
-        us tokensIndex;                                                   /*!< The index of #tokens */
-        std::vector<normalizer::interpreter::token::LiteralToken> tokens; /*!< The list of tokens from \ref normalizer::interpreter::lexer::Lexer::grabAllTokens "Lexer::grabAllTokens()" */
-        std::vector<std::string> splitTextContent;                        /*!< The text content split on newlines for easier error printing */
+        us tokensIndex;                                                    /*!< The index of #tokens */
+        std::vector<normalizer::interpreter::token::LiteralToken> tokens;  /*!< The list of tokens from \ref normalizer::interpreter::lexer::Lexer::grabAllTokens "Lexer::grabAllTokens()" */
+        std::vector<std::string> splitTextContent;                         /*!< The text content split on newlines for easier error printing */
+        normalizer::table::Table table;                                    /*!< The table that will be created */
+        normalizer::table::row::GenericRowDefinition currentRowDefinition; /*!< The current definition of the row to be added to #table */
     };
 } // Namespace normalizer::interpreter::parser

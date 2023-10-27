@@ -53,6 +53,23 @@ namespace normalizer::interpreter::parser
         throw std::invalid_argument(errorString);
     }
 
+    void ParserValidator::validateRowNameDoesntExist(const normalizer::interpreter::token::LiteralToken &token, const std::string &textLine, const normalizer::table::Table &table, const std::string &rowName)
+    {
+        const std::vector<normalizer::table::row::TableRow> tableRows = table.getTableRows();
+
+        std::string errorString = ParserValidator::constructBasicErrorMessage(token, textLine);
+
+        errorString += "On line number " + std::to_string(token.getLineNumber() + 1) + " there was a duplicated row name found";
+
+        for (const normalizer::table::row::TableRow &tableRow : tableRows)
+        {
+            if (rowName == tableRow.getRowName())
+            {
+                throw std::invalid_argument(errorString);
+            }
+        }
+    }
+
     std::string ParserValidator::constructBasicErrorMessage(const normalizer::interpreter::token::LiteralToken &token, const std::string &textLine)
     {
         std::string errorString = textLine + '\n';
@@ -76,4 +93,5 @@ namespace normalizer::interpreter::parser
 
         return errorString;
     }
+
 } // Namespace normalizer::interpreter::parser
