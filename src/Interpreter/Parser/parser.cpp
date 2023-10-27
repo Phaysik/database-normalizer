@@ -39,11 +39,45 @@ namespace normalizer::interpreter
         this->splitTextContent.push_back(lineContent); // After last \n add the remainig line
     }
 
+    parser::Parser::Parser(const std::string &text, const normalizer::table::Table &sqlTable) : tokensIndex(0)
+    {
+        lexer::Lexer lexer(text);
+
+        for (const token::LiteralToken &token : lexer.grabAllTokens())
+        {
+            this->tokens.push_back(token);
+        }
+
+        std::string lineContent;
+
+        for (const char character : text)
+        {
+            if (character == '\n')
+            {
+                this->splitTextContent.push_back(lineContent);
+                lineContent = "";
+            }
+            else
+            {
+                lineContent += character;
+            }
+        }
+
+        this->splitTextContent.push_back(lineContent); // After last \n add the remainig line
+
+        this->table = sqlTable;
+    }
+
     /* Getters and Setters */
 
     normalizer::table::Table parser::Parser::getTable() const
     {
         return this->table;
+    }
+
+    normalizer::dependencies::DependencyManager parser::Parser::getDependencyManager() const
+    {
+        return this->dependencyManager;
     }
 
     /* Member Functions */
@@ -62,9 +96,14 @@ namespace normalizer::interpreter
                     this->parseCreateStatement();
                     break;
                 case token::TokenConstants::T_IDENTIFIER: // For parsing dependencies
+                    ParserValidator::validateRowName(currentToken, this->splitTextContent[currentToken.getLineNumber()], this->table);
+
+                    this->addDependencyRowIfNotExists(currentToken.getTokenValue());
+                    this->currentDependencyRowName = currentToken.getTokenValue();
                     this->parseDependencies();
                     break;
                 case token::TokenConstants::T_KEY: // For parsing the primary key of the dependencies
+                    ParserValidator::validatePrimaryKey(currentToken, this->splitTextContent[currentToken.getLineNumber()], this->dependencyManager);
                     this->parseKey();
                     break;
                 default:
@@ -72,6 +111,11 @@ namespace normalizer::interpreter
                     ParserValidator::throwUknownToken(currentToken, this->splitTextContent[currentToken.getLineNumber()]);
                     break;
                 }
+            }
+
+            for (const normalizer::dependencies::row::DependencyRow &row : this->dependencyRows)
+            {
+                this->dependencyManager.addDependency(row);
             }
         }
         catch (const std::exception &e)
@@ -448,16 +492,27 @@ namespace normalizer::interpreter
     {
         token::LiteralToken currentToken = this->getNextToken();
 
+        this->multiValuedDependency = false;
+
         switch (currentToken.getTokenType())
         {
         case token::TokenConstants::T_RANGLE:
             currentToken = this->getNextToken();
 
+            this->multiValuedDependency = true;
+
             switch (currentToken.getTokenType())
             {
             case token::TokenConstants::T_IDENTIFIER:
+                ParserValidator::validateRowName(currentToken, this->splitTextContent[currentToken.getLineNumber()], this->table);
+
+                ParserValidator::validateMultiDependencyExists(currentToken, this->splitTextContent[currentToken.getLineNumber()], this->dependencyRows, this->currentDependencyRowName);
+
+                this->addMultiDependency(currentToken.getTokenValue());
                 break;
             case token::TokenConstants::T_LPAREN: // Multiple dependent columns
+                ParserValidator::validateMultiDependencyExists(currentToken, this->splitTextContent[currentToken.getLineNumber()], this->dependencyRows, this->currentDependencyRowName);
+
                 this->parseMultipleDependentColumns();
                 break;
             case token::TokenConstants::T_UNKNOWN:
@@ -470,8 +525,15 @@ namespace normalizer::interpreter
 
             break;
         case token::TokenConstants::T_IDENTIFIER: // If no multi value dependency
+            ParserValidator::validateRowName(currentToken, this->splitTextContent[currentToken.getLineNumber()], this->table);
+
+            ParserValidator::validateSingleDependencyExists(currentToken, this->splitTextContent[currentToken.getLineNumber()], this->dependencyRows, this->currentDependencyRowName);
+
+            this->addSingleDependency(currentToken.getTokenValue());
             break;
         case token::TokenConstants::T_LPAREN: // Multiple dependent columns
+            ParserValidator::validateSingleDependencyExists(currentToken, this->splitTextContent[currentToken.getLineNumber()], this->dependencyRows, this->currentDependencyRowName);
+
             this->parseMultipleDependentColumns();
             break;
         case token::TokenConstants::T_UNKNOWN:
@@ -492,6 +554,8 @@ namespace normalizer::interpreter
             switch (currentToken.getTokenType())
             {
             case token::TokenConstants::T_IDENTIFIER:
+                this->callAppropriateDependentValidation(currentToken);
+
                 break;
             case token::TokenConstants::T_UNKNOWN:
                 ParserValidator::throwUknownToken(currentToken, this->splitTextContent[currentToken.getLineNumber()]);
@@ -531,6 +595,9 @@ namespace normalizer::interpreter
             switch (currentToken.getTokenType())
             {
             case token::TokenConstants::T_IDENTIFIER:
+                ParserValidator::validateRowName(currentToken, this->splitTextContent[currentToken.getLineNumber()], this->table);
+
+                this->dependencyManager.addPrimaryKey(currentToken.getTokenValue());
                 break;
             case token::TokenConstants::T_LPAREN:
                 this->parseMultiplePrimaryKeys();
@@ -562,6 +629,9 @@ namespace normalizer::interpreter
             switch (currentToken.getTokenType())
             {
             case token::TokenConstants::T_IDENTIFIER:
+                ParserValidator::validateRowName(currentToken, this->splitTextContent[currentToken.getLineNumber()], this->table);
+
+                this->dependencyManager.addPrimaryKey(currentToken.getTokenValue());
                 break;
             case token::TokenConstants::T_UNKNOWN:
                 ParserValidator::throwUknownToken(currentToken, this->splitTextContent[currentToken.getLineNumber()]);
@@ -586,6 +656,61 @@ namespace normalizer::interpreter
                 ParserValidator::throwUnexpectedToken(currentToken, this->splitTextContent[currentToken.getLineNumber()], ", or )");
                 break;
             }
+        }
+    }
+
+    void parser::Parser::addDependencyRowIfNotExists(const std::string &rowName)
+    {
+        for (const normalizer::dependencies::row::DependencyRow &row : this->dependencyRows)
+        {
+            if (row.getRowName() == rowName)
+            {
+                return;
+            }
+        }
+
+        this->dependencyRows.push_back({rowName});
+    }
+
+    void parser::Parser::addSingleDependency(const std::string &dependentValue)
+    {
+        for (normalizer::dependencies::row::DependencyRow &row : this->dependencyRows)
+        {
+            if (row.getRowName() == this->currentDependencyRowName)
+            {
+                row.addSingleDependency(dependentValue);
+                return;
+            }
+        }
+    }
+
+    void parser::Parser::addMultiDependency(const std::string &dependentValue)
+    {
+        for (normalizer::dependencies::row::DependencyRow &row : this->dependencyRows)
+        {
+            if (row.getRowName() == this->currentDependencyRowName)
+            {
+                row.addMultiDependency(dependentValue);
+                return;
+            }
+        }
+    }
+
+    void parser::Parser::callAppropriateDependentValidation(const token::LiteralToken &currentToken)
+    {
+        ParserValidator::validateRowName(currentToken, this->splitTextContent[currentToken.getLineNumber()], this->table);
+
+        if (this->multiValuedDependency)
+        {
+            ParserValidator::validateMultiDependentValue(currentToken, this->splitTextContent[currentToken.getLineNumber()], this->dependencyRows, this->currentDependencyRowName);
+
+            this->addMultiDependency(currentToken.getTokenValue());
+        }
+        else
+        {
+            ParserValidator::validateSingleDependentValue(currentToken, this->splitTextContent[currentToken.getLineNumber()], this->dependencyRows, this->currentDependencyRowName);
+
+            this->addSingleDependency(currentToken.getTokenValue());
         }
     }
 } // Namespace normalizer::interpreter

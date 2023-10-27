@@ -20,6 +20,8 @@
 #include "Table/TableRow/RowDefinition/genericRowDefinition.h"
 #include "Table/TableRow/tableRow.h"
 #include "Table/table.h"
+#include "Dependencies/DependencyRow/dependencyRow.h"
+#include "Dependencies/dependencyManager.h"
 
 namespace normalizer::interpreter::parser
 {
@@ -43,6 +45,15 @@ namespace normalizer::interpreter::parser
         */
         Parser(const std::string &textContent);
 
+        /*! \brief Creates a Parser instance
+            \param[in] textContent The text content to be parsed
+            \param[in] sqlTable The parsed sql table
+            \date 10/27/2023
+            \version 1.0
+            \author Matthew Moore
+        */
+        Parser(const std::string &textContent, const normalizer::table::Table &sqlTable);
+
         /*! \brief The default destructor
             \date 10/26/2023
             \version 1.0
@@ -59,6 +70,14 @@ namespace normalizer::interpreter::parser
             \return Table The parsed table
         */
         normalizer::table::Table getTable() const;
+
+        /*! \brief Get the parsed dependency manager
+            \date 10/27/2023
+            \version 1.0
+            \author Matthew Moore
+            \return DependencyManager The parsed dependency manager
+        */
+        normalizer::dependencies::DependencyManager getDependencyManager() const;
 
         /* Member Functions */
 
@@ -187,10 +206,47 @@ namespace normalizer::interpreter::parser
         */
         void parseMultiplePrimaryKeys();
 
-        us tokensIndex;                                                    /*!< The index of #tokens */
-        std::vector<normalizer::interpreter::token::LiteralToken> tokens;  /*!< The list of tokens from \ref normalizer::interpreter::lexer::Lexer::grabAllTokens "Lexer::grabAllTokens()" */
-        std::vector<std::string> splitTextContent;                         /*!< The text content split on newlines for easier error printing */
-        normalizer::table::Table table;                                    /*!< The table that will be created */
-        normalizer::table::row::GenericRowDefinition currentRowDefinition; /*!< The current definition of the row to be added to #table */
+        /*! \brief Adds a dependency row to #dependencyRows if it does not already exist
+            \param[in] rowName The name of the dependency row
+            \date 10/27/2023
+            \version 1.0
+            \author Matthew Moore
+        */
+        void addDependencyRowIfNotExists(const std::string &rowName);
+
+        /*! \brief Adds a single valued dependency to #dependencyRows
+            \param[in] dependentValue The value of the single valued dependency
+            \date 10/27/2023
+            \version 1.0
+            \author Matthew Moore
+        */
+        void addSingleDependency(const std::string &dependentValue);
+
+        /*! \brief Adds a multi valued dependency to #dependencyRows
+            \param[in] dependentValue The value of the multi valued dependency
+            \date 10/27/2023
+            \version 1.0
+            \author Matthew Moore
+        */
+        void addMultiDependency(const std::string &dependentValue);
+
+        /*! \brief Calls the appropriate validation function for either single or multi valued dependencies
+            \param[in] currentToken The current token to validate
+            \date 10/27/2023
+            \version 1.0
+            \author Matthew Moore
+        */
+        void callAppropriateDependentValidation(const token::LiteralToken &currentToken);
+
+        us tokensIndex;                                                           /*!< The index of #tokens */
+        std::vector<normalizer::interpreter::token::LiteralToken> tokens;         /*!< The list of tokens from \ref normalizer::interpreter::lexer::Lexer::grabAllTokens "Lexer::grabAllTokens()" */
+        std::vector<std::string> splitTextContent;                                /*!< The text content split on newlines for easier error printing */
+        normalizer::table::Table table;                                           /*!< The table that will be created */
+        normalizer::table::row::GenericRowDefinition currentRowDefinition;        /*!< The current definition of the row to be added to #table */
+        normalizer::dependencies::DependencyManager dependencyManager;            /*!< The dependency manager that will be used to create the dependencies */
+        std::vector<normalizer::dependencies::row::DependencyRow> dependencyRows; /*!< The list of dependency rows that will be added to #dependencyManager */
+        std::string currentDependencyRowName;                                     /*!< The name of the current dependency row */
+        bool multiValuedDependency;
+        /*!< Whether or not the current dependency row is a multi valued dependency */
     };
 } // Namespace normalizer::interpreter::parser

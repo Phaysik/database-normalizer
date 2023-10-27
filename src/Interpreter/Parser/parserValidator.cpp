@@ -70,6 +70,115 @@ namespace normalizer::interpreter::parser
         }
     }
 
+    void ParserValidator::validatePrimaryKey(const normalizer::interpreter::token::LiteralToken &token, const std::string &textLine, const normalizer::dependencies::DependencyManager &dependencyManager)
+    {
+        std::string errorString = ParserValidator::constructBasicErrorMessage(token, textLine);
+
+        errorString += "On line number " + std::to_string(token.getLineNumber() + 1) + " there was a duplicated primary key declaration found.\n";
+
+        if (dependencyManager.getPrimaryKeys().size() > 0)
+        {
+            throw std::invalid_argument(errorString);
+        }
+    }
+
+    void ParserValidator::validateSingleDependencyExists(const normalizer::interpreter::token::LiteralToken &token, const std::string &textLine, const std::vector<normalizer::dependencies::row::DependencyRow> &dependencyRows, const std::string &currentRowName)
+    {
+        std::string errorString = ParserValidator::constructBasicDependencyMessage(token, textLine, false);
+
+        errorString += "On line number " + std::to_string(token.getLineNumber() + 1) + " there was a duplicated single dependency row name found.\n";
+
+        for (const normalizer::dependencies::row::DependencyRow &dependencyRow : dependencyRows)
+        {
+            if (dependencyRow.getRowName() == currentRowName)
+            {
+                if (dependencyRow.getSingleDependencies().size() > 0)
+                {
+                    throw std::invalid_argument(errorString);
+                }
+            }
+        }
+    }
+
+    void ParserValidator::validateSingleDependentValue(const normalizer::interpreter::token::LiteralToken &token, const std::string &textLine, const std::vector<normalizer::dependencies::row::DependencyRow> &dependencyRows, const std::string &currentRowName)
+    {
+        std::string errorString = ParserValidator::constructBasicErrorMessage(token, textLine);
+
+        errorString += "On line number " + std::to_string(token.getLineNumber() + 1) + " there was a duplicated dependent value found.\n";
+
+        for (const normalizer::dependencies::row::DependencyRow &dependencyRow : dependencyRows)
+        {
+            if (dependencyRow.getRowName() == currentRowName)
+            {
+                for (const std::string &dependencyValue : dependencyRow.getSingleDependencies())
+                {
+                    if (token.getTokenValue() == dependencyValue)
+                    {
+                        throw std::invalid_argument(errorString);
+                    }
+                }
+            }
+        }
+    }
+
+    void ParserValidator::validateMultiDependencyExists(const normalizer::interpreter::token::LiteralToken &token, const std::string &textLine, const std::vector<normalizer::dependencies::row::DependencyRow> &dependencyRows, const std::string &currentRowName)
+    {
+        std::string errorString = ParserValidator::constructBasicDependencyMessage(token, textLine, true);
+
+        errorString += "On line number " + std::to_string(token.getLineNumber() + 1) + " there was a duplicated multi dependency row name found.\n";
+
+        for (const normalizer::dependencies::row::DependencyRow &dependencyRow : dependencyRows)
+        {
+            if (dependencyRow.getRowName() == currentRowName)
+            {
+                if (dependencyRow.getMultiDependencies().size() > 0)
+                {
+                    throw std::invalid_argument(errorString);
+                }
+            }
+        }
+    }
+
+    void ParserValidator::validateMultiDependentValue(const normalizer::interpreter::token::LiteralToken &token, const std::string &textLine, const std::vector<normalizer::dependencies::row::DependencyRow> &dependencyRows, const std::string &currentRowName)
+    {
+        std::string errorString = ParserValidator::constructBasicErrorMessage(token, textLine);
+
+        errorString += "On line number " + std::to_string(token.getLineNumber() + 1) + " there was a duplicated dependent value found.\n";
+
+        for (const normalizer::dependencies::row::DependencyRow &dependencyRow : dependencyRows)
+        {
+            if (dependencyRow.getRowName() == currentRowName)
+            {
+                for (const std::string &dependencyValue : dependencyRow.getMultiDependencies())
+                {
+                    if (token.getTokenValue() == dependencyValue)
+                    {
+                        throw std::invalid_argument(errorString);
+                    }
+                }
+            }
+        }
+    }
+
+    void ParserValidator::validateRowName(const normalizer::interpreter::token::LiteralToken &token, const std::string &textLine, const normalizer::table::Table &table)
+    {
+        std::string errorString = ParserValidator::constructBasicErrorMessage(token, textLine);
+
+        errorString += "On line number " + std::to_string(token.getLineNumber() + 1) + " there was a row name that does not exist in the table found.\n";
+
+        const std::vector<normalizer::table::row::TableRow> tableRows = table.getTableRows();
+
+        for (const normalizer::table::row::TableRow &row : tableRows)
+        {
+            if (row.getRowName() == token.getTokenValue())
+            {
+                return;
+            }
+        }
+
+        throw std::invalid_argument(errorString);
+    }
+
     std::string ParserValidator::constructBasicErrorMessage(const normalizer::interpreter::token::LiteralToken &token, const std::string &textLine)
     {
         std::string errorString = textLine + '\n';
@@ -94,4 +203,27 @@ namespace normalizer::interpreter::parser
         return errorString;
     }
 
+    std::string ParserValidator::constructBasicDependencyMessage(const normalizer::interpreter::token::LiteralToken &token, const std::string &textLine, const bool isMultiValued)
+    {
+        std::string errorString = textLine + '\n';
+
+        for (us i = 0; i < static_cast<us>(token.getLineOffset()); ++i) // Zero base so 1 less than the line offset
+        {
+            errorString += " ";
+        }
+
+        for (us i = 0; i < 2 + (isMultiValued ? 1 : 0); ++i)
+        {
+            errorString += "^";
+        }
+
+        errorString += '\n';
+
+        for (us i = 0; i < parser::ERROR_WHAT_SIZE; ++i) // Zero base so 1 less than the line offset
+        {
+            errorString += " ";
+        }
+
+        return errorString;
+    }
 } // Namespace normalizer::interpreter::parser

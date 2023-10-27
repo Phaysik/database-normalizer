@@ -1,6 +1,4 @@
-test_id -> (help, test_id, help)
-help ->> please
-help ->> (test_you, please)
-KEY: help
-please -> help
-KEY: (test_id, help)
+test_id -> (new_test, help)
+new_test -> new_test_one
+help ->> help_me
+KEY: test_id
