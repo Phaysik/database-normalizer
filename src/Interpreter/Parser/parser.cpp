@@ -50,26 +50,33 @@ namespace normalizer::interpreter
 
     void parser::Parser::parse()
     {
-        while (this->hasMoreTokens())
+        try
         {
-            token::LiteralToken currentToken = this->getNextToken();
-
-            switch (currentToken.getTokenType())
+            while (this->hasMoreTokens())
             {
-            case token::TokenConstants::T_CREATE:
-                this->parseCreateStatement();
-                break;
-            case token::TokenConstants::T_IDENTIFIER: // For parsing dependencies
-                this->parseDependencies();
-                break;
-            case token::TokenConstants::T_KEY: // For parsing the primary key of the dependencies
-                this->parseKey();
-                break;
-            default:
-                // Don't need to specify T_UNKNOWN as a case here as default will catch it
-                ParserValidator::throwUknownToken(currentToken, this->splitTextContent[currentToken.getLineNumber()]);
-                break;
+                token::LiteralToken currentToken = this->getNextToken();
+
+                switch (currentToken.getTokenType())
+                {
+                case token::TokenConstants::T_CREATE:
+                    this->parseCreateStatement();
+                    break;
+                case token::TokenConstants::T_IDENTIFIER: // For parsing dependencies
+                    this->parseDependencies();
+                    break;
+                case token::TokenConstants::T_KEY: // For parsing the primary key of the dependencies
+                    this->parseKey();
+                    break;
+                default:
+                    // Don't need to specify T_UNKNOWN as a case here as default will catch it
+                    ParserValidator::throwUknownToken(currentToken, this->splitTextContent[currentToken.getLineNumber()]);
+                    break;
+                }
             }
+        }
+        catch (const std::exception &e)
+        {
+            std::cerr << e.what() << std::endl;
         }
     }
 
