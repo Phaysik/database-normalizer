@@ -160,6 +160,8 @@ namespace normalizer::interpreter
                 return {currentValue, token::TokenConstants::T_RPAREN, this->lineNumber, this->lineOffset, 1};
             case ';':
                 return {currentValue, token::TokenConstants::T_SEMICOLON, this->lineNumber, this->lineOffset, 1};
+            case ':':
+                return {currentValue, token::TokenConstants::T_COLON, this->lineNumber, this->lineOffset, 1};
             case ',':
                 return {currentValue, token::TokenConstants::T_COMMA, this->lineNumber, this->lineOffset, 1};
             case '-':
@@ -299,7 +301,7 @@ namespace normalizer::interpreter
             this->putBackChar(); // To remove the last grabbed character that was not 0-9
         }
 
-        ul parsedValue = std::strtoul(trueValue.c_str(), nullptr, lexer::DECIMAL_BASE); // Convert it to an unsigned long
+        ul parsedValue = std::strtoul(trueValue.c_str(), nullptr, normalizer::DECIMAL_BASE); // Convert it to an unsigned long
 
         return {parsedValue, this->lineNumber, this->lineOffset, static_cast<us>(trueValue.length())};
     }
