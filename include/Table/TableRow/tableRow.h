@@ -57,7 +57,7 @@ namespace normalizer::table::row
             \author Matthew Moore
             \return GenericRowDefinition The definition of the table row
         */
-        GenericRowDefinition getRowDefinition() const;
+        GenericRowDefinition &getRowDefinition();
 
     private:
         std::string rowName;                /*!< The name of the row */

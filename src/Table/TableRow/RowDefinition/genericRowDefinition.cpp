@@ -44,7 +44,8 @@ namespace normalizer::table::row
 
     /* Member Functions */
 
-    void GenericRowDefinition::defaultValues() {
+    void GenericRowDefinition::defaultValues()
+    {
         this->dataType = "";
         this->nullable = false;
         this->size = -1;

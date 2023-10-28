@@ -103,7 +103,7 @@ namespace normalizer::interpreter
                     this->parseDependencies();
                     break;
                 case token::TokenConstants::T_KEY: // For parsing the primary key of the dependencies
-                    ParserValidator::validatePrimaryKey(currentToken, this->splitTextContent[currentToken.getLineNumber()], this->dependencyManager);
+                    ParserValidator::validatePrimaryKey(currentToken, this->splitTextContent[currentToken.getLineNumber()], this->table);
                     this->parseKey();
                     break;
                 default:
@@ -597,7 +597,7 @@ namespace normalizer::interpreter
             case token::TokenConstants::T_IDENTIFIER:
                 ParserValidator::validateRowName(currentToken, this->splitTextContent[currentToken.getLineNumber()], this->table);
 
-                this->dependencyManager.addPrimaryKey(currentToken.getTokenValue());
+                this->table.addPrimaryKey(currentToken.getTokenValue());
                 break;
             case token::TokenConstants::T_LPAREN:
                 this->parseMultiplePrimaryKeys();
@@ -631,7 +631,7 @@ namespace normalizer::interpreter
             case token::TokenConstants::T_IDENTIFIER:
                 ParserValidator::validateRowName(currentToken, this->splitTextContent[currentToken.getLineNumber()], this->table);
 
-                this->dependencyManager.addPrimaryKey(currentToken.getTokenValue());
+                this->table.addPrimaryKey(currentToken.getTokenValue());
                 break;
             case token::TokenConstants::T_UNKNOWN:
                 ParserValidator::throwUknownToken(currentToken, this->splitTextContent[currentToken.getLineNumber()]);

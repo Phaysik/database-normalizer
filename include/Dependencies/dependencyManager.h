@@ -10,7 +10,6 @@
 
 #include <string>
 #include <vector>
-#include <unordered_map>
 
 #include "DependencyRow/dependencyRow.h"
 
@@ -26,14 +25,6 @@ namespace normalizer::dependencies
     {
     public:
         /* Getters and Setters */
-
-        /*! \brief Gets the primary keys of the table
-            \date 10/27/2023
-            \version 1.0
-            \author Matthew Moore
-            \return std::vector<std::string> The primary keys of the table
-        */
-        std::vector<std::string> getPrimaryKeys() const;
 
         /*! \brief Gets the dependency rows of the table
             \date 10/27/2023
@@ -53,16 +44,7 @@ namespace normalizer::dependencies
         */
         void addDependency(const row::DependencyRow &row);
 
-        /*! \brief Adds a primary key to the manager
-            \param[in] primaryKey The primary key to add
-            \date 10/27/2023
-            \version 1.0
-            \author Matthew Moore
-        */
-        void addPrimaryKey(const std::string &primaryKey);
-
     private:
-        std::vector<std::string> primaryKeys;           /*!< The primary keys of the table */
         std::vector<row::DependencyRow> dependencyRows; /*!< The dependencies of each row */
     };
 }

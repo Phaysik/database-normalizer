@@ -80,18 +80,18 @@ namespace normalizer::interpreter::parser
             \version 1.0
             \author Matthew Moore
         */
-        static void validateRowNameDoesntExist(const normalizer::interpreter::token::LiteralToken &token, const std::string &textLine, const normalizer::table::Table &table, const std::string &rowName);
+        static void validateRowNameDoesntExist(const normalizer::interpreter::token::LiteralToken &token, const std::string &textLine, normalizer::table::Table &table, const std::string &rowName);
 
         /*! \brief Determines if \p dependencyManager already has set a primary key
             \post The program may throw an error depending on it \p dependencyManager already has set a primary key
             \param[in] token The potentially duplicated primary key token
             \param[in] textLine The line of the text where \p token was
-            \param[in] dependencyManager The manager of the primary key(s)
+            \param[in] table The manager of the primary key(s)
             \date 10/27/2023
             \version 1.0
             \author Matthew Moore
         */
-        static void validatePrimaryKey(const normalizer::interpreter::token::LiteralToken &token, const std::string &textLine, const normalizer::dependencies::DependencyManager &dependencyManager);
+        static void validatePrimaryKey(const normalizer::interpreter::token::LiteralToken &token, const std::string &textLine, const normalizer::table::Table &table);
 
         /*! \brief Determines if \p currentRowName already exists in \p dependencyRows for single valued dependencies
             \post The program may throw an error depending on if \p currentRowName already exists in \p dependencyRows for single valued dependencies
@@ -150,7 +150,7 @@ namespace normalizer::interpreter::parser
             \version 1.0
             \author Matthew Moore
         */
-        static void validateRowName(const normalizer::interpreter::token::LiteralToken &token, const std::string &textLine, const normalizer::table::Table &table);
+        static void validateRowName(const normalizer::interpreter::token::LiteralToken &token, const std::string &textLine, normalizer::table::Table &table);
 
     private:
         /* Static Methods */

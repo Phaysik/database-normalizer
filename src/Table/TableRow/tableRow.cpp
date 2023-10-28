@@ -17,7 +17,7 @@ namespace normalizer::table::row
         return this->rowName;
     }
 
-    GenericRowDefinition TableRow::getRowDefinition() const
+    GenericRowDefinition &TableRow::getRowDefinition()
     {
         return this->rowDefinition;
     }

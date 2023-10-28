@@ -12,11 +12,6 @@ namespace normalizer::dependencies
 {
     /* Getters and Setters */
 
-    std::vector<std::string> DependencyManager::getPrimaryKeys() const
-    {
-        return this->primaryKeys;
-    }
-
     std::vector<row::DependencyRow> DependencyManager::getDependencyRows() const
     {
         return this->dependencyRows;
@@ -27,10 +22,5 @@ namespace normalizer::dependencies
     void DependencyManager::addDependency(const row::DependencyRow &row)
     {
         this->dependencyRows.push_back(row);
-    }
-
-    void DependencyManager::addPrimaryKey(const std::string &primaryKey)
-    {
-        this->primaryKeys.push_back(primaryKey);
     }
 }

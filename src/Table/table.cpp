@@ -17,7 +17,7 @@ namespace normalizer::table
         return this->tableName;
     }
 
-    std::vector<row::TableRow> Table::getTableRows() const
+    std::vector<row::TableRow> &Table::getTableRows()
     {
         return this->tableRows;
     }
@@ -25,6 +25,11 @@ namespace normalizer::table
     bool Table::getIfNotExists() const
     {
         return this->ifNotExists;
+    }
+
+    std::vector<std::string> Table::getPrimaryKeys() const
+    {
+        return this->primaryKeys;
     }
 
     void Table::setTableName(const std::string &name)
@@ -42,5 +47,10 @@ namespace normalizer::table
     void Table::addTableRow(const row::TableRow &row)
     {
         this->tableRows.push_back(row);
+    }
+
+    void Table::addPrimaryKey(const std::string &primaryKey)
+    {
+        this->primaryKeys.push_back(primaryKey);
     }
 }
