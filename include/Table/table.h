@@ -64,7 +64,7 @@ namespace normalizer::table
             \author Matthew Moore
             \return std::vector<std::vector<row::TableRow>> The rows of the table
         */
-        std::vector<row::TableRow> getTableRows() const;
+        std::vector<row::TableRow> &getTableRows();
 
         /*! \brief Get if the table should be created if it does not exist
             \date 10/26/2023
@@ -73,6 +73,14 @@ namespace normalizer::table
             \return bool If the table should be created if it does not exist
         */
         bool getIfNotExists() const;
+
+        /*! \brief Gets the primary keys of the table
+            \date 10/28/2023
+            \version 1.0
+            \author Matthew Moore
+            \return std::vector<std::string> The primary keys of the table
+        */
+        std::vector<std::string> getPrimaryKeys() const;
 
         /*! \brief Set the name of the table
             \param[in] name The name of the table
@@ -101,9 +109,18 @@ namespace normalizer::table
         */
         void addTableRow(const row::TableRow &row);
 
+        /*! \brief Adds a primary key to the manager
+            \param[in] primaryKey The primary key to add
+            \date 10/28/2023
+            \version 1.0
+            \author Matthew Moore
+        */
+        void addPrimaryKey(const std::string &primaryKey);
+
     private:
         std::string tableName;                /*!< The name of the table */
         bool ifNotExists;                     /*!< Whether to create the table if it exists or not */
+        std::vector<std::string> primaryKeys; /*!< The primary keys of the table */
         std::vector<row::TableRow> tableRows; /*!< The rows of the table */
     };
 }

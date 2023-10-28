@@ -57,9 +57,70 @@ namespace normalizer
         */
         ~Normalizer() {}
 
+        /* Member Functions */
+
+        /*! \brief Normalizes the database according to #normalizeTo
+            \date 10/28/2023
+            \version 1.0
+            \author Matthew Moore
+        */
+        void normalize();
+
+        /*! \brief Determines if #table is in 1NF
+            \details Checks to see if #table is in 1NF by determining if the columns are nullable, or if there is no primary key assigned
+            \date 10/27/2023
+            \version 1.0
+            \author Matthew Moore
+            \return bool If #table is in 1NF
+        */
+        bool determineInOneNF();
+
+        /*! \brief Normalizes the database into 1NF
+            \date 10/27/2023
+            \version 1.0
+            \author Matthew Moore
+        */
+        void normalizeToOneNF();
+
+        /*! \brief Converts a 1NF database into a string representation
+            \date 10/28/2023
+            \version 1.0
+            \author Matthew Moore
+            \return std::string The string representation of the 1NF database
+        */
+        std::string toOneNFString();
+
+        /*! \brief Converts the tables rows into a string representation
+            \param [in] inTable The table whos rows are to be converted
+            \date 10/28/2023
+            \version 1.0
+            \author Matthew Moore
+            \return std::string The string representation of the tables rows
+        */
+        std::string getTableRowString(table::Table &inTable);
+
+        /*! \brief Converts the tables primary keys into a string representation
+            \param[in] inTable The primary keys to be converted
+            \date 10/28/2023
+            \version 1.0
+            \author Matthew Moore
+            \return std::string The string representation of the tables primary keys
+        */
+        std::string getTableRowPrimaryKeyString(table::Table &inTable);
+
+        /*! \brief Gets the rows in the database that do not depend on another row
+            \date 10/27/2023
+            \version 1.0
+            \author Matthew Moore
+            \return std::vector<std::string> The rows in the database that do not depend on another row
+        */
+        std::vector<std::string> getNonDependentRows();
+
     private:
         us normalizeTo;                               /*!< The normalization form to go to */
         table::Table table;                           /*!< The table to normalizer */
         dependencies::DependencyManager dependencies; /*!< The functional dependencies of the project */
+        bool hasPrimaryKey;                           /*!< If the table has a primary key set */
+        bool hasNullableRows;                         /*!< If the table has any nullable rows */
     };
 }

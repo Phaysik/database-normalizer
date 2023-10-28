@@ -53,9 +53,9 @@ namespace normalizer::interpreter::parser
         throw std::invalid_argument(errorString);
     }
 
-    void ParserValidator::validateRowNameDoesntExist(const normalizer::interpreter::token::LiteralToken &token, const std::string &textLine, const normalizer::table::Table &table, const std::string &rowName)
+    void ParserValidator::validateRowNameDoesntExist(const normalizer::interpreter::token::LiteralToken &token, const std::string &textLine, normalizer::table::Table &table, const std::string &rowName)
     {
-        const std::vector<normalizer::table::row::TableRow> tableRows = table.getTableRows();
+        const std::vector<normalizer::table::row::TableRow> &tableRows = table.getTableRows();
 
         std::string errorString = ParserValidator::constructBasicErrorMessage(token, textLine);
 
@@ -70,13 +70,13 @@ namespace normalizer::interpreter::parser
         }
     }
 
-    void ParserValidator::validatePrimaryKey(const normalizer::interpreter::token::LiteralToken &token, const std::string &textLine, const normalizer::dependencies::DependencyManager &dependencyManager)
+    void ParserValidator::validatePrimaryKey(const normalizer::interpreter::token::LiteralToken &token, const std::string &textLine, const normalizer::table::Table &table)
     {
         std::string errorString = ParserValidator::constructBasicErrorMessage(token, textLine);
 
         errorString += "On line number " + std::to_string(token.getLineNumber() + 1) + " there was a duplicated primary key declaration found.\n";
 
-        if (dependencyManager.getPrimaryKeys().size() > 0)
+        if (table.getPrimaryKeys().size() > 0)
         {
             throw std::invalid_argument(errorString);
         }
@@ -160,13 +160,13 @@ namespace normalizer::interpreter::parser
         }
     }
 
-    void ParserValidator::validateRowName(const normalizer::interpreter::token::LiteralToken &token, const std::string &textLine, const normalizer::table::Table &table)
+    void ParserValidator::validateRowName(const normalizer::interpreter::token::LiteralToken &token, const std::string &textLine, normalizer::table::Table &table)
     {
         std::string errorString = ParserValidator::constructBasicErrorMessage(token, textLine);
 
         errorString += "On line number " + std::to_string(token.getLineNumber() + 1) + " there was a row name that does not exist in the table found.\n";
 
-        const std::vector<normalizer::table::row::TableRow> tableRows = table.getTableRows();
+        const std::vector<normalizer::table::row::TableRow> &tableRows = table.getTableRows();
 
         for (const normalizer::table::row::TableRow &row : tableRows)
         {

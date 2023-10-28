@@ -32,6 +32,8 @@ int main()
 {
     normalizer::Normalizer normalizer(1, normalizer::file::SQL_DATASET_FOLDER + "dataset.sql", normalizer::file::FUNCTIONAL_DEPENDENCIES_FOLDER + "dependencies.txt");
 
+    normalizer.normalize();
+
     // normalizer::file::FileManager sqlManager(normalizer::file::SQL_DATASET_FOLDER + "dataset.sql", false);
 
     // std::string sqlContents = sqlManager.grabFileContents();
