@@ -1,7 +1,10 @@
 CREATE TABLE IF NOT EXISTS TESTING (
-    new_test INT NOT NULL,
-    new_test_one INT NULL,
-    help VARCHAR(255) NOT NULL,
-    test_id INTEGER(4),
-    help_me VARCHAR(12)
+    StudentID INT NOT NULL,
+    FirstName VARCHAR(255) NOT NULL,
+    LastName VARCHAR(255) NOT NULL,
+    Course VARCHAR(255) NOT NULL,
+    Professor VARCHAR(255) NOT NULL,
+    ProfessorEmail VARCHAR(255) NOT NULL,
+    CourseStart VARCHAR(255) NOT NULL,
+    CourseEnd VARCHAR(255) NOT NULL
 );

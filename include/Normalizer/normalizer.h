@@ -10,6 +10,7 @@
 
 #include <string>
 #include <vector>
+#include <unordered_map>
 
 #include "aliases.h"
 #include "FileManager/fileManager.h"
@@ -82,6 +83,13 @@ namespace normalizer
         */
         void normalizeToOneNF();
 
+        /*! \brief Normalizes the database into 2NF
+            \date 10/29/2023
+            \version 1.0
+            \author Matthew Moore
+        */
+        void normalizeToTwoNF();
+
         /*! \brief Converts a 1NF database into a string representation
             \date 10/28/2023
             \version 1.0
@@ -116,9 +124,26 @@ namespace normalizer
         */
         std::vector<std::string> getNonDependentRows();
 
+        /*! \brief Gets the partial dependencies in the database
+            \date 10/29/2023
+            \version 1.0
+            \author Matthew Moore
+            \return std::vector<std::string> The partial dependencies in the database
+        */
+        std::vector<std::pair<std::string, std::string>> getPartialDependencies();
+
+        /*! \brief Gets the transitive dependencies in the database
+            \date 10/29/2023
+            \version 1.0
+            \author Matthew Moore
+            \return std::vector<std::string> The transitive dependencies in the database
+        */
+        std::vector<std::pair<std::string, std::string>> getTrasitiveDependencies();
+
     private:
         us normalizeTo;                               /*!< The normalization form to go to */
         table::Table table;                           /*!< The table to normalizer */
+        std::vector<table::Table> normalizedTables;   /*!< The normalized tables */
         dependencies::DependencyManager dependencies; /*!< The functional dependencies of the project */
         bool hasPrimaryKey;                           /*!< If the table has a primary key set */
         bool hasNullableRows;                         /*!< If the table has any nullable rows */

@@ -32,6 +32,11 @@ namespace normalizer::table
         return this->primaryKeys;
     }
 
+    std::vector<foreign::ForeignKey> Table::getForeignKeys() const
+    {
+        return this->foreignKeys;
+    }
+
     void Table::setTableName(const std::string &name)
     {
         this->tableName = name;
@@ -52,5 +57,10 @@ namespace normalizer::table
     void Table::addPrimaryKey(const std::string &primaryKey)
     {
         this->primaryKeys.push_back(primaryKey);
+    }
+
+    void Table::addForeignKey(const foreign::ForeignKey &foreignKey)
+    {
+        this->foreignKeys.push_back(foreignKey);
     }
 }

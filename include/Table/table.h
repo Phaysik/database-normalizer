@@ -12,6 +12,7 @@
 #include <vector>
 
 #include "TableRow/tableRow.h"
+#include "ForeignKey/foreignKey.h"
 
 namespace normalizer::table
 {
@@ -82,6 +83,14 @@ namespace normalizer::table
         */
         std::vector<std::string> getPrimaryKeys() const;
 
+        /*! \brief Gets the foreign keys of the table
+            \date 10/29/2023
+            \version 1.0
+            \author Matthew Moore
+            \return std::vector<foreign::ForeignKey> The foreign keys of the table
+        */
+        std::vector<foreign::ForeignKey> getForeignKeys() const;
+
         /*! \brief Set the name of the table
             \param[in] name The name of the table
             \date 10/26/2023
@@ -117,10 +126,19 @@ namespace normalizer::table
         */
         void addPrimaryKey(const std::string &primaryKey);
 
+        /*! \brief Adds a foreign key to the manager
+            \param[in] foreignKey The foreign key to add
+            \date 10/29/2023
+            \version 1.0
+            \author Matthew Moore
+        */
+        void addForeignKey(const foreign::ForeignKey &foreignKey);
+
     private:
-        std::string tableName;                /*!< The name of the table */
-        bool ifNotExists;                     /*!< Whether to create the table if it exists or not */
-        std::vector<std::string> primaryKeys; /*!< The primary keys of the table */
-        std::vector<row::TableRow> tableRows; /*!< The rows of the table */
+        std::string tableName;                        /*!< The name of the table */
+        bool ifNotExists;                             /*!< Whether to create the table if it exists or not */
+        std::vector<std::string> primaryKeys;         /*!< The primary keys of the table */
+        std::vector<foreign::ForeignKey> foreignKeys; /*!< The foreign keys of the table */
+        std::vector<row::TableRow> tableRows;         /*!< The rows of the table */
     };
 }

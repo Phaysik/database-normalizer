@@ -52,6 +52,9 @@ namespace normalizer
             this->normalizeToOneNF();
             std::cout << this->toOneNFString() << std::endl;
             break;
+
+        case 2:
+            this->normalizeToTwoNF();
         default:
             break;
         }
@@ -122,6 +125,29 @@ namespace normalizer
         }
     }
 
+    void Normalizer::normalizeToTwoNF()
+    {
+        this->normalizeToOneNF(); // To be in 2NF, it must first be in 1NF
+
+        std::vector<std::pair<std::string, std::string>> partialDependencies = this->getPartialDependencies();
+        std::vector<std::pair<std::string, std::string>> transitiveDependencies = this->getTrasitiveDependencies(); // In 2NF we keep the transitive dependencies
+
+        if (partialDependencies.size() == 0)
+        {
+            return; // Already in 2NF as there are no partial dependencies
+        }
+
+        for (const auto &dependency : partialDependencies)
+        {
+            std::cout << "Primary Key: " << dependency.first << " Partial Dependency: " << dependency.second << std::endl;
+        }
+
+        for (const auto &dependency : transitiveDependencies)
+        {
+            std::cout << "Non Prime Key: " << dependency.first << " Transitive Dependency: " << dependency.second << std::endl;
+        }
+    }
+
     std::string Normalizer::toOneNFString()
     {
         std::string returnValue = "CREATE TABLE";
@@ -163,15 +189,20 @@ namespace normalizer
 
     std::string Normalizer::getTableRowPrimaryKeyString(table::Table &inTable)
     {
-        std::string returnValue = "\tPRIMARY KEY(";
+        std::string returnValue = "";
 
-        for (const std::string &key : inTable.getPrimaryKeys())
+        if (inTable.getPrimaryKeys().size() > 0)
         {
-            returnValue += key + ", ";
-        }
+            returnValue += "\tPRIMARY KEY(";
 
-        returnValue = returnValue.substr(0, returnValue.length() - 2);
-        returnValue += ")\n";
+            for (const std::string &key : inTable.getPrimaryKeys())
+            {
+                returnValue += key + ", ";
+            }
+
+            returnValue = returnValue.substr(0, returnValue.length() - 2);
+            returnValue += ")\n";
+        }
 
         return returnValue;
     }
@@ -216,5 +247,128 @@ namespace normalizer
         }
 
         return nonDependentRows;
+    }
+
+    std::vector<std::pair<std::string, std::string>> Normalizer::getPartialDependencies()
+    {
+        std::vector<std::pair<std::string, std::string>> partialDependencies;
+
+        std::unordered_map<std::string, std::vector<std::string>> primaryKeyDependencies;
+
+        std::vector<std::string> primaryKeys = this->table.getPrimaryKeys();
+        std::vector<dependencies::row::DependencyRow> dependencyRows = this->dependencies.getDependencyRows();
+
+        for (us i = 0; i < primaryKeys.size(); ++i)
+        {
+            for (us j = 0; j < dependencyRows.size(); ++j)
+            {
+                if (primaryKeys[i] == dependencyRows[j].getRowName())
+                {
+                    for (const std::string &singleValued : dependencyRows[j].getSingleDependencies())
+                    {
+                        primaryKeyDependencies[primaryKeys[i]].push_back(singleValued);
+                    }
+
+                    for (const std::string &multiValued : dependencyRows[j].getMultiDependencies())
+                    {
+                        primaryKeyDependencies[primaryKeys[i]].push_back(multiValued);
+                    }
+                }
+            }
+        } // Get a map of the primary keys and their dependencies
+
+        std::unordered_map<std::string, us> dependencyCounts;
+
+        for (const auto &pair : primaryKeyDependencies)
+        {
+            for (const std::string &dependency : pair.second)
+            {
+                if (dependencyCounts.find(dependency) == dependencyCounts.end())
+                {
+                    dependencyCounts[dependency] = 1;
+                }
+                else
+                {
+                    ++dependencyCounts[dependency];
+                }
+            }
+        } // Count how many times each dependency occurs
+
+        for (const auto &dependencyPair : dependencyCounts)
+        {
+            if (dependencyPair.second != primaryKeys.size()) // If the dependency does not occur in every primary key
+            {
+                for (const auto &pair : primaryKeyDependencies)
+                {
+                    for (const std::string &dependency : pair.second)
+                    {
+                        if (dependency == dependencyPair.first) // If the depenency occurs in this specific primary key add it to the partial dependencies
+                        {
+                            partialDependencies.push_back(std::make_pair(pair.first, dependencyPair.first));
+                        }
+                    }
+                }
+            }
+        }
+
+        return partialDependencies;
+    }
+
+    std::vector<std::pair<std::string, std::string>> Normalizer::getTrasitiveDependencies()
+    {
+        std::vector<std::pair<std::string, std::string>> transitiveDependencies;
+
+        std::unordered_map<std::string, std::vector<std::string>> primaryKeyDependencies;
+
+        std::vector<std::string> primaryKeys = this->table.getPrimaryKeys();
+        std::vector<dependencies::row::DependencyRow> dependencyRows = this->dependencies.getDependencyRows();
+        std::vector<std::string> dependencyRowNames;
+        std::vector<std::string> transitiveRowName;
+
+        for (us i = 0; i < dependencyRows.size(); ++i)
+        {
+            dependencyRowNames.push_back(dependencyRows[i].getRowName());
+        } // Get a list of all the dependency row names
+
+        for (us i = 0; i < dependencyRowNames.size(); ++i)
+        {
+            bool isPrimaryKey = false;
+
+            for (us j = 0; j < primaryKeys.size(); ++j)
+            {
+                if (primaryKeys[j] == dependencyRowNames[i])
+                {
+                    isPrimaryKey = true;
+                    break;
+                }
+            }
+
+            if (!isPrimaryKey)
+            {
+                for (us j = 0; j < dependencyRows.size(); ++j)
+                {
+                    if (dependencyRowNames[i] != dependencyRows[j].getRowName())
+                    {
+                        continue;
+                    }
+                    else
+                    {
+                        for (const std::string &singleValued : dependencyRows[j].getSingleDependencies())
+                        {
+                            transitiveDependencies.push_back(std::make_pair(dependencyRowNames[i], singleValued));
+                        }
+
+                        for (const std::string &multiValued : dependencyRows[j].getMultiDependencies())
+                        {
+                            transitiveDependencies.push_back(std::make_pair(dependencyRowNames[i], multiValued));
+                        }
+
+                        break;
+                    }
+                }
+            }
+        }
+
+        return transitiveDependencies;
     }
 }
