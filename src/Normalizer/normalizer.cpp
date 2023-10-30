@@ -42,6 +42,13 @@ namespace normalizer
         }
     }
 
+    /* Getters and Setters */
+
+    std::vector<table::Table> &Normalizer::getNormalizedTables()
+    {
+        return this->normalizedTables;
+    }
+
     /* Member Functions */
 
     void Normalizer::normalize()
@@ -50,11 +57,11 @@ namespace normalizer
         {
         case 1:
             this->normalizeToOneNF();
-            std::cout << this->toOneNFString() << std::endl;
+            this->normalizedTables.push_back(this->table);
             break;
-
         case 2:
             this->normalizeToTwoNF();
+            break;
         default:
             break;
         }
@@ -137,29 +144,105 @@ namespace normalizer
             return; // Already in 2NF as there are no partial dependencies
         }
 
+        std::unordered_map<std::string, table::Table> newTables;
+
+        const std::vector<table::row::TableRow> &tableRows = this->table.getTableRows();
+
         for (const auto &dependency : partialDependencies)
         {
-            std::cout << "Primary Key: " << dependency.first << " Partial Dependency: " << dependency.second << std::endl;
+            // std::cout << "Primary Key: " << dependency.first << " Partial Dependency: " << dependency.second << std::endl;
+            for (us i = 0; i < tableRows.size();)
+            {
+                if (tableRows[i].getRowName() != dependency.second) // Skip if not a partial dependency
+                {
+                    i++;
+                    continue;
+                }
+
+                if (newTables.find(dependency.first) == newTables.end()) // If the primary key doesn't already exist
+                {
+                    newTables[dependency.first] = table::Table(this->convertRowToTableName(dependency.first));
+
+                    newTables[dependency.first].addPrimaryKey(dependency.first); // Add the primary key to the new table
+                    newTables[dependency.first].addTableRow(tableRows[i]);       // Add the row to the new table
+                    this->table.removeTableRow(tableRows[i]);                    // Remove the row from the original table
+                }
+                else
+                {
+                    newTables[dependency.first].addTableRow(tableRows[i]); // Add the row to the new table
+                    this->table.removeTableRow(tableRows[i]);              // Remove the row from the original table
+                }
+            }
+        }
+
+        for (const std::string &primaryKey : this->table.getPrimaryKeys())
+        {
+            if (newTables.find(primaryKey) != newTables.end()) // If the the new table exists
+                for (const table::row::TableRow &row : tableRows)
+                {
+                    if (row.getRowName() == primaryKey) // Add the primary key to the new table
+                    {
+                        newTables[primaryKey].addTableRow(row);
+                        break;
+                    }
+                }
         }
 
         for (const auto &dependency : transitiveDependencies)
         {
-            std::cout << "Non Prime Key: " << dependency.first << " Transitive Dependency: " << dependency.second << std::endl;
+            for (const std::string &primaryKey : this->table.getPrimaryKeys())
+            {
+                if (newTables.find(primaryKey) != newTables.end()) // If the the new table exists
+                {
+                    for (const table::row::TableRow &row : newTables[primaryKey].getTableRows())
+                    {
+                        if (row.getRowName() == dependency.first) // Find the row that has the transitive dependency
+                        {
+                            for (const table::row::TableRow &innerRow : tableRows)
+                            {
+                                if (innerRow.getRowName() == dependency.second) // Find the row that is the transitive dependency
+                                {
+                                    newTables[primaryKey].addTableRow(innerRow); // Add the transitive dependency to the new table
+                                    this->table.removeTableRow(innerRow);        // Remove the transitive dependency from the original table
+                                    break;
+                                }
+                            }
+                            break;
+                        }
+                    }
+                }
+            }
+        }
+
+        for (auto &pair : newTables)
+        {
+            if (tableRows.size() > this->table.getPrimaryKeys().size()) // If the original table has more rows than just the primary keys, implies at least one row is dependent on the entire primary key
+            {
+                this->normalizedTables.push_back(this->table);
+            }
+
+            this->normalizedTables.push_back(pair.second);
+
+            if (this->table.getPrimaryKeys().size() > 1 && this->normalizedTables.size() > 1)
+            {
+                this->createTableOnCompositeKey();
+            }
         }
     }
 
-    std::string Normalizer::toOneNFString()
+    std::string Normalizer::printTable(table::Table &inTable)
     {
         std::string returnValue = "CREATE TABLE";
 
-        if (this->table.getIfNotExists())
+        if (inTable.getIfNotExists())
         {
             returnValue += " IF NOT EXISTS";
         }
 
-        returnValue += " " + this->table.getTableName() + "(\n";
-        returnValue += this->getTableRowString(this->table);
-        returnValue += this->getTableRowPrimaryKeyString(this->table);
+        returnValue += " " + inTable.getTableName() + "(\n";
+        returnValue += this->getTableRowString(inTable);
+        returnValue += this->getTableRowPrimaryKeyString(inTable);
+        returnValue += this->getTableRowForeignKeyString(inTable);
         returnValue += ");\n";
 
         return returnValue;
@@ -202,6 +285,30 @@ namespace normalizer
 
             returnValue = returnValue.substr(0, returnValue.length() - 2);
             returnValue += ")\n";
+        }
+
+        return returnValue;
+    }
+
+    std::string Normalizer::getTableRowForeignKeyString(table::Table &inTable)
+    {
+        std::string returnValue = "";
+
+        if (inTable.getForeignKeys().size() > 0)
+        {
+            for (const table::foreign::ForeignKey &foreignKey : inTable.getForeignKeys())
+            {
+                returnValue += "\tFOREIGN KEY (";
+                returnValue += foreignKey.getTableRow();
+                returnValue += ") REFERENCES ";
+                returnValue += foreignKey.getReferencedTableName();
+                returnValue += "(";
+                returnValue += foreignKey.getReferencedTableRow();
+                returnValue += "),\n";
+            }
+
+            returnValue = returnValue.substr(0, returnValue.length() - 2);
+            returnValue += "\n";
         }
 
         return returnValue;
@@ -370,5 +477,66 @@ namespace normalizer
         }
 
         return transitiveDependencies;
+    }
+
+    std::string Normalizer::convertRowToTableName(const std::string &rowName) const
+    {
+        std::string tableName;
+        tableName += static_cast<char>(std::toupper(rowName[0]));
+
+        for (us i = 1; i < rowName.length(); ++i)
+        {
+            tableName += rowName[i];
+        }
+
+        tableName += "Table";
+
+        return tableName;
+    }
+
+    void Normalizer::createTableOnCompositeKey()
+    {
+        std::string compositeTableName;
+        std::vector<table::row::TableRow> primaryKeyRows;
+
+        for (const std::string &primaryKey : this->table.getPrimaryKeys())
+        {
+            compositeTableName += primaryKey;
+
+            for (const table::row::TableRow &row : this->table.getTableRows())
+            {
+                if (row.getRowName() == primaryKey)
+                {
+                    primaryKeyRows.push_back(row);
+                }
+            }
+        }
+
+        compositeTableName += "Table";
+
+        table::Table compositeTable(compositeTableName);
+
+        for (const table::row::TableRow &primaryKeyRow : primaryKeyRows)
+        {
+            compositeTable.addTableRow(primaryKeyRow);
+
+            std::string rowName = primaryKeyRow.getRowName();
+
+            compositeTable.addForeignKey({rowName, this->convertRowToTableName(rowName), rowName});
+        }
+
+        this->normalizedTables.push_back(compositeTable);
+    }
+
+    /* Operator Overloads */
+
+    std::ostream &operator<<(std::ostream &outputStream, Normalizer &normalizer)
+    {
+        for (table::Table &table : normalizer.getNormalizedTables())
+        {
+            outputStream << normalizer.printTable(table) << std::endl;
+        }
+
+        return outputStream;
     }
 }

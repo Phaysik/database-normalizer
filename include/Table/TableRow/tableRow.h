@@ -59,6 +59,17 @@ namespace normalizer::table::row
         */
         GenericRowDefinition &getRowDefinition();
 
+        /* Operator Overloads */
+
+        /*! \brief Checks to see if two table rows are equal
+            \param[in] other The other table row to compare to
+            \date 10/30/2023
+            \version 1.0
+            \author Matthew Moore
+            \return bool If the two table rows are equal
+        */
+        bool operator==(const TableRow &other) const;
+
     private:
         std::string rowName;                /*!< The name of the row */
         GenericRowDefinition rowDefinition; /*!< The definition of the row */

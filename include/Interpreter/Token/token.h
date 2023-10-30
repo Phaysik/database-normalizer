@@ -95,8 +95,8 @@ namespace normalizer::interpreter::token
         /* Operator Overloads */
 
         /*! \brief Pretty print the \ref #normalizer::interpreter::token::Token "Token"
-            \pre \p os must be a stream that is writeable to
-            \post \p os will have the updated text to write to the stream.
+            \pre \p outputStream must be a stream that is writeable to
+            \post \p outputStream will have the updated text to write to the stream.
             \param[in, out] outputStream The stream to write to
             \param[in] token The \ref #normalizer::interpreter::token::Token "Token" to write out
             \date 10/11/2023

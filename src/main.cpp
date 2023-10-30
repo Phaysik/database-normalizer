@@ -21,5 +21,7 @@ int main()
 
     normalizer.normalize();
 
+    std::cout << normalizer << std::endl;
+
     return 0;
 }

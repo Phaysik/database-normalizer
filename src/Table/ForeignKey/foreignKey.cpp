@@ -26,4 +26,11 @@ namespace normalizer::table::foreign
     {
         return this->referencedTableRow;
     }
+
+    /* Operator Overloads */
+
+    bool ForeignKey::operator==(const ForeignKey &other) const
+    {
+        return this->tableRow == other.tableRow && this->referencedTableName == other.referencedTableName && this->referencedTableRow == other.referencedTableRow;
+    }
 }

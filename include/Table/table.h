@@ -10,6 +10,7 @@
 
 #include <string>
 #include <vector>
+#include <algorithm>
 
 #include "TableRow/tableRow.h"
 #include "ForeignKey/foreignKey.h"
@@ -118,6 +119,14 @@ namespace normalizer::table
         */
         void addTableRow(const row::TableRow &row);
 
+        /*! \brief The row to be removed from the table
+            \param[in] row The row to be removed from the table
+            \date 10/30/2023
+            \version 1.0
+            \author Matthew Moore
+        */
+        void removeTableRow(const row::TableRow &row);
+
         /*! \brief Adds a primary key to the manager
             \param[in] primaryKey The primary key to add
             \date 10/28/2023
@@ -126,6 +135,14 @@ namespace normalizer::table
         */
         void addPrimaryKey(const std::string &primaryKey);
 
+        /*! \brief Removes a primary key from the manager
+            \param[in] primaryKey The primary key to be removed
+            \date 10/30/2023
+            \version 1.0
+            \author Matthew Moore
+        */
+        void removePrimaryKey(const std::string &primaryKey);
+
         /*! \brief Adds a foreign key to the manager
             \param[in] foreignKey The foreign key to add
             \date 10/29/2023
@@ -133,6 +150,17 @@ namespace normalizer::table
             \author Matthew Moore
         */
         void addForeignKey(const foreign::ForeignKey &foreignKey);
+
+        /* Operator Overloads */
+
+        /*! \brief Checks to see if two tables are equal
+            \param[in] other The other table to compare to
+            \date 10/30/2023
+            \version 1.0
+            \author Matthew Moore
+            \return bool If the two tables are equal
+        */
+        bool operator==(const Table &other) const;
 
     private:
         std::string tableName;                        /*!< The name of the table */

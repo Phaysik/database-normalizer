@@ -33,6 +33,13 @@ namespace normalizer::table::foreign
         */
         ForeignKey(const std::string &inRow, const std::string &refTableName, const std::string &refTableRow) : tableRow(inRow), referencedTableName(refTableName), referencedTableRow(refTableRow) {}
 
+        /*! \brief The default destructor
+            \date 10/30/2023
+            \version 1.0
+            \author Matthew Moore
+        */
+        ~ForeignKey(){};
+
         /* Getters and Setters */
 
         /*! \brief Gets the row in the table that is a foreign key
@@ -58,6 +65,17 @@ namespace normalizer::table::foreign
             \return std::string The row in #referencedTableName that is being referenced
         */
         std::string getReferencedTableRow() const;
+
+        /* Operator Overloads */
+
+        /*! \brief Checks to see if two foreign keys are the same
+            \param[in] other The foreign key to compare against
+            \date 10/30/2023
+            \version 1.0
+            \author Matthew Moore
+            \return bool If the two foreign keys are the same
+        */
+        bool operator==(const ForeignKey &other) const;
 
     private:
         std::string tableRow;            /*!< The row in the table that is a foreign key */
