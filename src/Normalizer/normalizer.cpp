@@ -42,6 +42,13 @@ namespace normalizer
         }
     }
 
+    /* Getters and Setters */
+
+    std::vector<table::Table> &Normalizer::getNormalizedTables()
+    {
+        return this->normalizedTables;
+    }
+
     /* Member Functions */
 
     void Normalizer::normalize()
@@ -50,7 +57,10 @@ namespace normalizer
         {
         case 1:
             this->normalizeToOneNF();
-            std::cout << this->toOneNFString() << std::endl;
+            this->normalizedTables.push_back(this->table);
+            break;
+        case 2:
+            this->normalizeToTwoNF();
             break;
         default:
             break;
@@ -122,18 +132,117 @@ namespace normalizer
         }
     }
 
-    std::string Normalizer::toOneNFString()
+    void Normalizer::normalizeToTwoNF()
+    {
+        this->normalizeToOneNF(); // To be in 2NF, it must first be in 1NF
+
+        std::vector<std::pair<std::string, std::string>> partialDependencies = this->getPartialDependencies();
+        std::vector<std::pair<std::string, std::string>> transitiveDependencies = this->getTrasitiveDependencies(); // In 2NF we keep the transitive dependencies
+
+        if (partialDependencies.size() == 0)
+        {
+            return; // Already in 2NF as there are no partial dependencies
+        }
+
+        std::unordered_map<std::string, table::Table> newTables;
+
+        const std::vector<table::row::TableRow> &tableRows = this->table.getTableRows();
+
+        for (const auto &dependency : partialDependencies)
+        {
+            // std::cout << "Primary Key: " << dependency.first << " Partial Dependency: " << dependency.second << std::endl;
+            for (us i = 0; i < tableRows.size();)
+            {
+                if (tableRows[i].getRowName() != dependency.second) // Skip if not a partial dependency
+                {
+                    i++;
+                    continue;
+                }
+
+                if (newTables.find(dependency.first) == newTables.end()) // If the primary key doesn't already exist
+                {
+                    newTables[dependency.first] = table::Table(this->convertRowToTableName(dependency.first));
+
+                    newTables[dependency.first].addPrimaryKey(dependency.first); // Add the primary key to the new table
+                    newTables[dependency.first].addTableRow(tableRows[i]);       // Add the row to the new table
+                    this->table.removeTableRow(tableRows[i]);                    // Remove the row from the original table
+                }
+                else
+                {
+                    newTables[dependency.first].addTableRow(tableRows[i]); // Add the row to the new table
+                    this->table.removeTableRow(tableRows[i]);              // Remove the row from the original table
+                }
+            }
+        }
+
+        for (const std::string &primaryKey : this->table.getPrimaryKeys())
+        {
+            if (newTables.find(primaryKey) != newTables.end()) // If the the new table exists
+                for (const table::row::TableRow &row : tableRows)
+                {
+                    if (row.getRowName() == primaryKey) // Add the primary key to the new table
+                    {
+                        newTables[primaryKey].addTableRow(row);
+                        break;
+                    }
+                }
+        }
+
+        for (const auto &dependency : transitiveDependencies)
+        {
+            for (const std::string &primaryKey : this->table.getPrimaryKeys())
+            {
+                if (newTables.find(primaryKey) != newTables.end()) // If the the new table exists
+                {
+                    for (const table::row::TableRow &row : newTables[primaryKey].getTableRows())
+                    {
+                        if (row.getRowName() == dependency.first) // Find the row that has the transitive dependency
+                        {
+                            for (const table::row::TableRow &innerRow : tableRows)
+                            {
+                                if (innerRow.getRowName() == dependency.second) // Find the row that is the transitive dependency
+                                {
+                                    newTables[primaryKey].addTableRow(innerRow); // Add the transitive dependency to the new table
+                                    this->table.removeTableRow(innerRow);        // Remove the transitive dependency from the original table
+                                    break;
+                                }
+                            }
+                            break;
+                        }
+                    }
+                }
+            }
+        }
+
+        for (auto &pair : newTables)
+        {
+            if (tableRows.size() > this->table.getPrimaryKeys().size()) // If the original table has more rows than just the primary keys, implies at least one row is dependent on the entire primary key
+            {
+                this->normalizedTables.push_back(this->table);
+            }
+
+            this->normalizedTables.push_back(pair.second);
+
+            if (this->table.getPrimaryKeys().size() > 1 && this->normalizedTables.size() > 1)
+            {
+                this->createTableOnCompositeKey();
+            }
+        }
+    }
+
+    std::string Normalizer::printTable(table::Table &inTable)
     {
         std::string returnValue = "CREATE TABLE";
 
-        if (this->table.getIfNotExists())
+        if (inTable.getIfNotExists())
         {
             returnValue += " IF NOT EXISTS";
         }
 
-        returnValue += " " + this->table.getTableName() + "(\n";
-        returnValue += this->getTableRowString(this->table);
-        returnValue += this->getTableRowPrimaryKeyString(this->table);
+        returnValue += " " + inTable.getTableName() + "(\n";
+        returnValue += this->getTableRowString(inTable);
+        returnValue += this->getTableRowPrimaryKeyString(inTable);
+        returnValue += this->getTableRowForeignKeyString(inTable);
         returnValue += ");\n";
 
         return returnValue;
@@ -163,15 +272,44 @@ namespace normalizer
 
     std::string Normalizer::getTableRowPrimaryKeyString(table::Table &inTable)
     {
-        std::string returnValue = "\tPRIMARY KEY(";
+        std::string returnValue = "";
 
-        for (const std::string &key : inTable.getPrimaryKeys())
+        if (inTable.getPrimaryKeys().size() > 0)
         {
-            returnValue += key + ", ";
+            returnValue += "\tPRIMARY KEY(";
+
+            for (const std::string &key : inTable.getPrimaryKeys())
+            {
+                returnValue += key + ", ";
+            }
+
+            returnValue = returnValue.substr(0, returnValue.length() - 2);
+            returnValue += ")\n";
         }
 
-        returnValue = returnValue.substr(0, returnValue.length() - 2);
-        returnValue += ")\n";
+        return returnValue;
+    }
+
+    std::string Normalizer::getTableRowForeignKeyString(table::Table &inTable)
+    {
+        std::string returnValue = "";
+
+        if (inTable.getForeignKeys().size() > 0)
+        {
+            for (const table::foreign::ForeignKey &foreignKey : inTable.getForeignKeys())
+            {
+                returnValue += "\tFOREIGN KEY (";
+                returnValue += foreignKey.getTableRow();
+                returnValue += ") REFERENCES ";
+                returnValue += foreignKey.getReferencedTableName();
+                returnValue += "(";
+                returnValue += foreignKey.getReferencedTableRow();
+                returnValue += "),\n";
+            }
+
+            returnValue = returnValue.substr(0, returnValue.length() - 2);
+            returnValue += "\n";
+        }
 
         return returnValue;
     }
@@ -216,5 +354,189 @@ namespace normalizer
         }
 
         return nonDependentRows;
+    }
+
+    std::vector<std::pair<std::string, std::string>> Normalizer::getPartialDependencies()
+    {
+        std::vector<std::pair<std::string, std::string>> partialDependencies;
+
+        std::unordered_map<std::string, std::vector<std::string>> primaryKeyDependencies;
+
+        std::vector<std::string> primaryKeys = this->table.getPrimaryKeys();
+        std::vector<dependencies::row::DependencyRow> dependencyRows = this->dependencies.getDependencyRows();
+
+        for (us i = 0; i < primaryKeys.size(); ++i)
+        {
+            for (us j = 0; j < dependencyRows.size(); ++j)
+            {
+                if (primaryKeys[i] == dependencyRows[j].getRowName())
+                {
+                    for (const std::string &singleValued : dependencyRows[j].getSingleDependencies())
+                    {
+                        primaryKeyDependencies[primaryKeys[i]].push_back(singleValued);
+                    }
+
+                    for (const std::string &multiValued : dependencyRows[j].getMultiDependencies())
+                    {
+                        primaryKeyDependencies[primaryKeys[i]].push_back(multiValued);
+                    }
+                }
+            }
+        } // Get a map of the primary keys and their dependencies
+
+        std::unordered_map<std::string, us> dependencyCounts;
+
+        for (const auto &pair : primaryKeyDependencies)
+        {
+            for (const std::string &dependency : pair.second)
+            {
+                if (dependencyCounts.find(dependency) == dependencyCounts.end())
+                {
+                    dependencyCounts[dependency] = 1;
+                }
+                else
+                {
+                    ++dependencyCounts[dependency];
+                }
+            }
+        } // Count how many times each dependency occurs
+
+        for (const auto &dependencyPair : dependencyCounts)
+        {
+            if (dependencyPair.second != primaryKeys.size()) // If the dependency does not occur in every primary key
+            {
+                for (const auto &pair : primaryKeyDependencies)
+                {
+                    for (const std::string &dependency : pair.second)
+                    {
+                        if (dependency == dependencyPair.first) // If the depenency occurs in this specific primary key add it to the partial dependencies
+                        {
+                            partialDependencies.push_back(std::make_pair(pair.first, dependencyPair.first));
+                        }
+                    }
+                }
+            }
+        }
+
+        return partialDependencies;
+    }
+
+    std::vector<std::pair<std::string, std::string>> Normalizer::getTrasitiveDependencies()
+    {
+        std::vector<std::pair<std::string, std::string>> transitiveDependencies;
+
+        std::unordered_map<std::string, std::vector<std::string>> primaryKeyDependencies;
+
+        std::vector<std::string> primaryKeys = this->table.getPrimaryKeys();
+        std::vector<dependencies::row::DependencyRow> dependencyRows = this->dependencies.getDependencyRows();
+        std::vector<std::string> dependencyRowNames;
+        std::vector<std::string> transitiveRowName;
+
+        for (us i = 0; i < dependencyRows.size(); ++i)
+        {
+            dependencyRowNames.push_back(dependencyRows[i].getRowName());
+        } // Get a list of all the dependency row names
+
+        for (us i = 0; i < dependencyRowNames.size(); ++i)
+        {
+            bool isPrimaryKey = false;
+
+            for (us j = 0; j < primaryKeys.size(); ++j)
+            {
+                if (primaryKeys[j] == dependencyRowNames[i])
+                {
+                    isPrimaryKey = true;
+                    break;
+                }
+            }
+
+            if (!isPrimaryKey)
+            {
+                for (us j = 0; j < dependencyRows.size(); ++j)
+                {
+                    if (dependencyRowNames[i] != dependencyRows[j].getRowName())
+                    {
+                        continue;
+                    }
+                    else
+                    {
+                        for (const std::string &singleValued : dependencyRows[j].getSingleDependencies())
+                        {
+                            transitiveDependencies.push_back(std::make_pair(dependencyRowNames[i], singleValued));
+                        }
+
+                        for (const std::string &multiValued : dependencyRows[j].getMultiDependencies())
+                        {
+                            transitiveDependencies.push_back(std::make_pair(dependencyRowNames[i], multiValued));
+                        }
+
+                        break;
+                    }
+                }
+            }
+        }
+
+        return transitiveDependencies;
+    }
+
+    std::string Normalizer::convertRowToTableName(const std::string &rowName) const
+    {
+        std::string tableName;
+        tableName += static_cast<char>(std::toupper(rowName[0]));
+
+        for (us i = 1; i < rowName.length(); ++i)
+        {
+            tableName += rowName[i];
+        }
+
+        tableName += "Table";
+
+        return tableName;
+    }
+
+    void Normalizer::createTableOnCompositeKey()
+    {
+        std::string compositeTableName;
+        std::vector<table::row::TableRow> primaryKeyRows;
+
+        for (const std::string &primaryKey : this->table.getPrimaryKeys())
+        {
+            compositeTableName += primaryKey;
+
+            for (const table::row::TableRow &row : this->table.getTableRows())
+            {
+                if (row.getRowName() == primaryKey)
+                {
+                    primaryKeyRows.push_back(row);
+                }
+            }
+        }
+
+        compositeTableName += "Table";
+
+        table::Table compositeTable(compositeTableName);
+
+        for (const table::row::TableRow &primaryKeyRow : primaryKeyRows)
+        {
+            compositeTable.addTableRow(primaryKeyRow);
+
+            std::string rowName = primaryKeyRow.getRowName();
+
+            compositeTable.addForeignKey({rowName, this->convertRowToTableName(rowName), rowName});
+        }
+
+        this->normalizedTables.push_back(compositeTable);
+    }
+
+    /* Operator Overloads */
+
+    std::ostream &operator<<(std::ostream &outputStream, Normalizer &normalizer)
+    {
+        for (table::Table &table : normalizer.getNormalizedTables())
+        {
+            outputStream << normalizer.printTable(table) << std::endl;
+        }
+
+        return outputStream;
     }
 }

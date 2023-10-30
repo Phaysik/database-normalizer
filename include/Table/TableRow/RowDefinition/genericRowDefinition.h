@@ -102,6 +102,17 @@ namespace normalizer::table::row
         */
         void defaultValues();
 
+        /* Operator Overloads */
+
+        /*! \brief Checks to see if two row definitions are equal.
+            \param[in] other The other row definition to compare to
+            \date 10/30/2023
+            \version 1.0
+            \author Matthew Moore
+            \return bool If the two row definitions are equal.
+        */
+        bool operator==(const GenericRowDefinition &other) const;
+
     private:
         std::string dataType; /*!< The type of the data */
         bool nullable;        /*!< If the row value can contain NULL */

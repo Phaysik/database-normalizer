@@ -21,4 +21,11 @@ namespace normalizer::table::row
     {
         return this->rowDefinition;
     }
+
+    /* Operator Overloads */
+
+    bool TableRow::operator==(const TableRow &other) const
+    {
+        return this->rowName == other.rowName && this->rowDefinition == other.rowDefinition;
+    }
 }

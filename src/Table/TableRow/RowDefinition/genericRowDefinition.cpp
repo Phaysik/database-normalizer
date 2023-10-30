@@ -50,4 +50,11 @@ namespace normalizer::table::row
         this->nullable = false;
         this->size = -1;
     }
+
+    /* Operator Overloads */
+
+    bool GenericRowDefinition::operator==(const GenericRowDefinition &other) const
+    {
+        return this->dataType == other.dataType && this->nullable == other.nullable && this->size == other.size;
+    }
 }
