@@ -1,0 +1,2 @@
+Ename ->> (Pname, Dname)
+Key: (Ename, Pname, Dname)
