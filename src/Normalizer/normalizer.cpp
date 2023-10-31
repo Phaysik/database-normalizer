@@ -12,7 +12,7 @@ namespace normalizer
 {
     /* Constructors and Destructors */
 
-    Normalizer::Normalizer(const us normalizeForm, const std::string &sqlFilePath, const std::string &dependencyFilePath) : normalizeTo(normalizeForm), hasPrimaryKey(true), hasNullableRows(false)
+    Normalizer::Normalizer(const NormalizationForm normalizeForm, const std::string &sqlFilePath, const std::string &dependencyFilePath) : normalizeTo(normalizeForm), hasPrimaryKey(true), hasNullableRows(false)
     {
         file::FileManager sqlManager(sqlFilePath, false);
 
@@ -55,15 +55,22 @@ namespace normalizer
     {
         switch (this->normalizeTo)
         {
-        case 1:
+        case NormalizationForm::ONE:
             this->normalizeToOneNF();
             this->normalizedTables.push_back(this->table);
             break;
-        case 2:
+        case NormalizationForm::TWO:
             this->normalizeToTwoNF();
             break;
-        case 3:
+        case NormalizationForm::THREE:
             this->normalizeToThreeNF();
+            break;
+        case NormalizationForm::BCNF:
+            this->normalizeToBCNF();
+            break;
+        case NormalizationForm::FOUR:
+            break;
+        case NormalizationForm::FIVE:
             break;
         default:
             break;
@@ -140,12 +147,14 @@ namespace normalizer
         this->normalizeToOneNF(); // To be in 2NF, it must first be in 1NF
 
         std::vector<std::pair<std::string, std::string>> partialDependencies = this->getPartialDependencies();
-        std::vector<std::pair<std::string, std::string>> transitiveDependencies = this->getTrasitiveDependencies(); // In 2NF we keep the transitive dependencies
 
         if (partialDependencies.size() == 0)
         {
+            this->normalizedTables.push_back(this->table);
             return; // Already in 2NF as there are no partial dependencies
         }
+
+        std::vector<std::pair<std::string, std::string>> transitiveDependencies = this->getTrasitiveDependencies(); // In 2NF we keep the transitive dependencies
 
         std::unordered_map<std::string, table::Table> newTables;
 
@@ -153,7 +162,6 @@ namespace normalizer
 
         for (const auto &dependency : partialDependencies)
         {
-            // std::cout << "Primary Key: " << dependency.first << " Partial Dependency: " << dependency.second << std::endl;
             for (us i = 0; i < tableRows.size();)
             {
                 if (tableRows[i].getRowName() != dependency.second) // Skip if not a partial dependency
@@ -267,8 +275,6 @@ namespace normalizer
                             {
                                 normTable.addForeignKey({pair.first, this->convertRowToTableName(pair.first), pair.first}); // Add the foreign key to the new table
 
-                                normTable.removeTableRow(innerRow); // Remove the transitive dependency from the original table
-
                                 bool primaryAlreadyIn = false;
 
                                 for (const table::row::TableRow &newRows : newTables[pair.first].getTableRows())
@@ -282,11 +288,14 @@ namespace normalizer
 
                                 if (!primaryAlreadyIn)
                                 {
-                                    newTables[pair.first].addTableRow(row);          // Add the primary key to the new table
-                                    newTables[pair.first].addPrimaryKey(pair.first); // Add the primary key to the new
+                                    newTables[pair.first].addTableRow(row);          // Add the primary key row to the new table
+                                    newTables[pair.first].addPrimaryKey(pair.first); // Add the primary key to the new table
                                 }
 
                                 newTables[pair.first].addTableRow(innerRow); // Add the transitive dependency to the new
+
+                                normTable.removeTableRow(innerRow); // Remove the transitive dependency from the original table
+
                                 found = true;
                                 break;
                             }
@@ -309,6 +318,86 @@ namespace normalizer
             this->normalizedTables.push_back(pair.second);
         }
     }
+
+    void Normalizer::normalizeToBCNF()
+    {
+        this->normalizeToThreeNF(); // To be in BCNF, it must first be in 3NF
+
+        std::vector<std::pair<std::string, std::string>> bcnfDependencies = this->getBCNFDependencies(); // In 2NF we keep the transitive dependencies
+
+        if (bcnfDependencies.size() == 0)
+        {
+            return; // Already in BCNF as there are no dependencies where X -> Y and X is not a superkey
+        }
+
+        std::unordered_map<std::string, table::Table> newTables;
+
+        for (const auto &pair : bcnfDependencies)
+        {
+            bool found = false;
+
+            if (newTables.find(pair.first) == newTables.end()) // Create the table if it does not already exist
+            {
+                newTables[pair.first] = table::Table(this->convertRowToTableName(pair.first));
+            }
+
+            for (table::Table &normTable : this->normalizedTables)
+            {
+                for (table::row::TableRow &row : normTable.getTableRows())
+                {
+                    if (row.getRowName() == pair.first) // Check if the row has the bcnf dependency
+                    {
+                        for (const table::row::TableRow &innerRow : normTable.getTableRows())
+                        {
+                            if (innerRow.getRowName() == pair.second) // Find the row that is the bcnf dependency
+                            {
+                                normTable.addForeignKey({pair.first, this->convertRowToTableName(pair.first), pair.first}); // Add the foreign key to the new table
+                                normTable.removePrimaryKey(innerRow.getRowName());                                          // Remove the primary key from the original table
+                                normTable.addPrimaryKey(row.getRowName());                                                  // Add the primary key to the original table
+
+                                bool primaryAlreadyIn = false;
+
+                                for (const table::row::TableRow &newRows : newTables[pair.first].getTableRows())
+                                {
+                                    if (newRows.getRowName() == pair.first)
+                                    {
+                                        primaryAlreadyIn = true;
+                                        break;
+                                    }
+                                }
+
+                                if (!primaryAlreadyIn)
+                                {
+                                    newTables[pair.first].addTableRow(row);          // Add the primary key row to the new table
+                                    newTables[pair.first].addPrimaryKey(pair.first); // Add the primary key to the new table
+                                }
+
+                                newTables[pair.first].addTableRow(innerRow); // Add the bcnf dependency to the new
+
+                                normTable.removeTableRow(innerRow); // Remove the bcnf dependency from the original table
+                                found = true;
+                                break;
+                            }
+                        }
+                        if (found)
+                        {
+                            break;
+                        }
+                    }
+                }
+                if (found)
+                {
+                    break;
+                }
+            }
+        }
+
+        for (const auto &pair : newTables) // Add the new tables to the normalized tables
+        {
+            this->normalizedTables.push_back(pair.second);
+        }
+    }
+
     std::string Normalizer::printTable(table::Table &inTable)
     {
         std::string returnValue = "CREATE TABLE";
@@ -509,53 +598,160 @@ namespace normalizer
         std::vector<std::string> primaryKeys = this->table.getPrimaryKeys();
         std::vector<dependencies::row::DependencyRow> dependencyRows = this->dependencies.getDependencyRows();
         std::vector<std::string> dependencyRowNames;
-        std::vector<std::string> transitiveRowName;
 
         for (us i = 0; i < dependencyRows.size(); ++i)
-        {
-            dependencyRowNames.push_back(dependencyRows[i].getRowName());
-        } // Get a list of all the dependency row names
-
-        for (us i = 0; i < dependencyRowNames.size(); ++i)
         {
             bool isPrimaryKey = false;
 
             for (us j = 0; j < primaryKeys.size(); ++j)
             {
-                if (primaryKeys[j] == dependencyRowNames[i])
+                if (primaryKeys[j] == dependencyRows[i].getRowName()) // If the row is a primary key, do not add it to check for transitive dependencies
                 {
                     isPrimaryKey = true;
                     break;
                 }
             }
-
             if (!isPrimaryKey)
             {
-                for (us j = 0; j < dependencyRows.size(); ++j)
+                dependencyRowNames.push_back(dependencyRows[i].getRowName()); // Get a list of all the dependency row names
+            }
+        }
+
+        for (us i = 0; i < dependencyRowNames.size(); ++i)
+        {
+            for (us j = 0; j < dependencyRows.size(); ++j)
+            {
+                if (dependencyRowNames[i] != dependencyRows[j].getRowName())
                 {
-                    if (dependencyRowNames[i] != dependencyRows[j].getRowName())
+                    continue;
+                }
+                else
+                {
+                    bool isPrimaryKey = false;
+
+                    for (const std::string &singleValued : dependencyRows[j].getSingleDependencies())
                     {
-                        continue;
-                    }
-                    else
-                    {
-                        for (const std::string &singleValued : dependencyRows[j].getSingleDependencies())
+                        isPrimaryKey = false;
+
+                        for (const std::string &primaryKey : primaryKeys) // If the dependency of the row is a primary key, do not add it to check for transitive dependencies
+                        {
+                            if (primaryKey == singleValued)
+                            {
+                                isPrimaryKey = true;
+                                break;
+                            }
+                        }
+
+                        if (!isPrimaryKey)
                         {
                             transitiveDependencies.push_back(std::make_pair(dependencyRowNames[i], singleValued));
                         }
+                    }
 
-                        for (const std::string &multiValued : dependencyRows[j].getMultiDependencies())
+                    for (const std::string &multiValued : dependencyRows[j].getMultiDependencies())
+                    {
+                        isPrimaryKey = false;
+
+                        for (const std::string &primaryKey : primaryKeys) // If the dependency of the row is a primary key, do not add it to check for transitive dependencies
+                        {
+                            if (primaryKey == multiValued)
+                            {
+                                isPrimaryKey = true;
+                                break;
+                            }
+                        }
+
+                        if (!isPrimaryKey)
                         {
                             transitiveDependencies.push_back(std::make_pair(dependencyRowNames[i], multiValued));
                         }
-
-                        break;
                     }
+
+                    break;
                 }
             }
         }
 
         return transitiveDependencies;
+    }
+
+    std::vector<std::pair<std::string, std::string>> Normalizer::getBCNFDependencies()
+    {
+        std::vector<std::pair<std::string, std::string>> bcnfDependencies;
+
+        std::unordered_map<std::string, std::vector<std::string>> primaryKeyDependencies;
+
+        std::vector<std::string> primaryKeys = this->table.getPrimaryKeys();
+        std::vector<dependencies::row::DependencyRow> dependencyRows = this->dependencies.getDependencyRows();
+        std::vector<std::string> dependencyRowNames;
+
+        for (us i = 0; i < dependencyRows.size(); ++i)
+        {
+            bool isPrimaryKey = false;
+
+            for (us j = 0; j < primaryKeys.size(); ++j)
+            {
+                if (primaryKeys[j] == dependencyRows[i].getRowName()) // If the row is a primary key, do not add it to check for transitive dependencies
+                {
+                    isPrimaryKey = true;
+                    break;
+                }
+            }
+            if (!isPrimaryKey)
+            {
+                dependencyRowNames.push_back(dependencyRows[i].getRowName()); // Get a list of all the dependency row names
+            }
+        }
+
+        for (us i = 0; i < dependencyRowNames.size(); ++i)
+        {
+            for (us j = 0; j < dependencyRows.size(); ++j)
+            {
+                if (dependencyRowNames[i] != dependencyRows[j].getRowName())
+                {
+                    continue;
+                }
+                else
+                {
+                    bool isPrimaryKey = false;
+
+                    for (const std::string &singleValued : dependencyRows[j].getSingleDependencies())
+                    {
+                        isPrimaryKey = false;
+
+                        for (const std::string &primaryKey : primaryKeys) // If the dependency of the row is a primary key, do not add it to check for transitive dependencies
+                        {
+                            if (primaryKey == singleValued)
+                            {
+                                isPrimaryKey = true;
+                                bcnfDependencies.push_back(std::make_pair(dependencyRowNames[i], singleValued));
+
+                                break;
+                            }
+                        }
+                    }
+
+                    for (const std::string &multiValued : dependencyRows[j].getMultiDependencies())
+                    {
+                        isPrimaryKey = false;
+
+                        for (const std::string &primaryKey : primaryKeys) // If the dependency of the row is a primary key, do not add it to check for transitive dependencies
+                        {
+                            if (primaryKey == multiValued)
+                            {
+                                isPrimaryKey = true;
+                                bcnfDependencies.push_back(std::make_pair(dependencyRowNames[i], multiValued));
+                                break;
+                            }
+                        }
+                    }
+
+                    break;
+                }
+            }
+        }
+
+        return bcnfDependencies;
     }
 
     std::string Normalizer::convertRowToTableName(const std::string &rowName) const

@@ -1,0 +1,4 @@
+StudentID -> Instructor
+Course -> Instructor
+Instructor -> Course
+Key: (StudentID, Course)
