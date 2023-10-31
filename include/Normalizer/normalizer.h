@@ -13,6 +13,7 @@
 #include <unordered_map>
 
 #include "aliases.h"
+#include "formConstants.h"
 #include "FileManager/fileManager.h"
 #include "Table/table.h"
 #include "Dependencies/dependencyManager.h"
@@ -39,7 +40,7 @@ namespace normalizer
             \version 1.0
             \author Matthew Moore
         */
-        Normalizer(const us normalizeForm, const std::string &sqlFilePath, const std::string &dependencyFilePath);
+        Normalizer(const NormalizationForm normalizeForm, const std::string &sqlFilePath, const std::string &dependencyFilePath);
 
         /*! \brief Creates a normalizer based on the desired normalization form as well as an already parsed sql table and functional dependencies file.
             \param[in] normalizeForm The form to normalize to
@@ -49,7 +50,7 @@ namespace normalizer
             \version 1.0
             \author Matthew Moore
         */
-        Normalizer(const us normalizeForm, const table::Table &sqlTable, const dependencies::DependencyManager &functionalDependencies) : normalizeTo(normalizeForm), table(sqlTable), dependencies(functionalDependencies) {}
+        Normalizer(const NormalizationForm normalizeForm, const table::Table &sqlTable, const dependencies::DependencyManager &functionalDependencies) : normalizeTo(normalizeForm), table(sqlTable), dependencies(functionalDependencies) {}
 
         /*! \brief The default destructor
             \date 10/27/2023
@@ -107,6 +108,13 @@ namespace normalizer
         */
         void normalizeToThreeNF();
 
+        /*! \brief Normalizes the database into BCNF
+            \date 10/30/2023
+            \version 1.0
+            \author Matthew Moore
+        */
+        void normalizeToBCNF();
+
         /*! \brief Converts the tables rows into a string representation
             \param [in] inTable The table whos rows are to be converted
             \date 10/28/2023
@@ -146,7 +154,7 @@ namespace normalizer
             \date 10/29/2023
             \version 1.0
             \author Matthew Moore
-            \return std::vector<std::string> The partial dependencies in the database
+            \return std::vector<std::pair<std::string, std::string>> The partial dependencies in the database
         */
         std::vector<std::pair<std::string, std::string>> getPartialDependencies();
 
@@ -154,9 +162,17 @@ namespace normalizer
             \date 10/29/2023
             \version 1.0
             \author Matthew Moore
-            \return std::vector<std::string> The transitive dependencies in the database
+            \return std::vector<std::pair<std::string, std::string>> The transitive dependencies in the database
         */
         std::vector<std::pair<std::string, std::string>> getTrasitiveDependencies();
+
+        /*! \brief Gets the dependencies that violate BCNF
+            \date 10/30/2023
+            \version 1.0
+            \author Matthew Moore
+            \return std::vector<std::pair<std::string, std::string>> The dependencies that violate BCNF
+        */
+        std::vector<std::pair<std::string, std::string>> getBCNFDependencies();
 
         /*! \brief Converts a row name into a table name
             \param[in] rowName The row name to be converted
@@ -200,7 +216,7 @@ namespace normalizer
         */
         std::string printTable(table::Table &inTable);
 
-        us normalizeTo;                               /*!< The normalization form to go to */
+        NormalizationForm normalizeTo;                /*!< The normalization form to go to */
         table::Table table;                           /*!< The table to normalizer */
         std::vector<table::Table> normalizedTables;   /*!< The normalized tables */
         dependencies::DependencyManager dependencies; /*!< The functional dependencies of the project */
