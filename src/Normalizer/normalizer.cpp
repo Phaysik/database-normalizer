@@ -62,6 +62,9 @@ namespace normalizer
         case 2:
             this->normalizeToTwoNF();
             break;
+        case 3:
+            this->normalizeToThreeNF();
+            break;
         default:
             break;
         }
@@ -222,14 +225,90 @@ namespace normalizer
             }
 
             this->normalizedTables.push_back(pair.second);
+        }
 
-            if (this->table.getPrimaryKeys().size() > 1 && this->normalizedTables.size() > 1)
-            {
-                this->createTableOnCompositeKey();
-            }
+        if (this->table.getPrimaryKeys().size() > 1 && this->normalizedTables.size() > 0) // If the original table was normalized to more tables then create a composite table connection
+        {
+            this->createTableOnCompositeKey();
         }
     }
 
+    void Normalizer::normalizeToThreeNF()
+    {
+        this->normalizeToTwoNF(); // To be in 3NF, it must first be in 2NF
+
+        std::vector<std::pair<std::string, std::string>> transitiveDependencies = this->getTrasitiveDependencies(); // In 2NF we keep the transitive dependencies
+
+        if (transitiveDependencies.size() == 0)
+        {
+            return; // Already in 3NF as there are no transitive dependencies
+        }
+
+        std::unordered_map<std::string, table::Table> newTables;
+
+        for (const auto &pair : transitiveDependencies)
+        {
+            bool found = false;
+
+            if (newTables.find(pair.first) == newTables.end()) // Create the table if it does not already exist
+            {
+                newTables[pair.first] = table::Table(this->convertRowToTableName(pair.first));
+            }
+
+            for (table::Table &normTable : this->normalizedTables)
+            {
+                for (table::row::TableRow &row : normTable.getTableRows())
+                {
+                    if (row.getRowName() == pair.first) // Check if the row has the transitive dependency
+                    {
+                        for (const table::row::TableRow &innerRow : normTable.getTableRows())
+                        {
+                            if (innerRow.getRowName() == pair.second) // Find the row that is the transitive dependency
+                            {
+                                normTable.addForeignKey({pair.first, this->convertRowToTableName(pair.first), pair.first}); // Add the foreign key to the new table
+
+                                normTable.removeTableRow(innerRow); // Remove the transitive dependency from the original table
+
+                                bool primaryAlreadyIn = false;
+
+                                for (const table::row::TableRow &newRows : newTables[pair.first].getTableRows())
+                                {
+                                    if (newRows.getRowName() == pair.first)
+                                    {
+                                        primaryAlreadyIn = true;
+                                        break;
+                                    }
+                                }
+
+                                if (!primaryAlreadyIn)
+                                {
+                                    newTables[pair.first].addTableRow(row);          // Add the primary key to the new table
+                                    newTables[pair.first].addPrimaryKey(pair.first); // Add the primary key to the new
+                                }
+
+                                newTables[pair.first].addTableRow(innerRow); // Add the transitive dependency to the new
+                                found = true;
+                                break;
+                            }
+                        }
+                        if (found)
+                        {
+                            break;
+                        }
+                    }
+                }
+                if (found)
+                {
+                    break;
+                }
+            }
+        }
+
+        for (const auto &pair : newTables) // Add the new tables to the normalized tables
+        {
+            this->normalizedTables.push_back(pair.second);
+        }
+    }
     std::string Normalizer::printTable(table::Table &inTable)
     {
         std::string returnValue = "CREATE TABLE";
@@ -499,11 +578,11 @@ namespace normalizer
         std::string compositeTableName;
         std::vector<table::row::TableRow> primaryKeyRows;
 
-        for (const std::string &primaryKey : this->table.getPrimaryKeys())
+        for (const std::string &primaryKey : this->table.getPrimaryKeys()) // Appends all the primary keys together
         {
             compositeTableName += primaryKey;
 
-            for (const table::row::TableRow &row : this->table.getTableRows())
+            for (const table::row::TableRow &row : this->table.getTableRows()) // Gets the rows for the primary key
             {
                 if (row.getRowName() == primaryKey)
                 {

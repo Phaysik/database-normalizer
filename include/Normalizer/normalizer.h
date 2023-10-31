@@ -100,6 +100,13 @@ namespace normalizer
         */
         void normalizeToTwoNF();
 
+        /*! \brief Normalizes the database into 3NF
+            \date 10/30/2023
+            \version 1.0
+            \author Matthew Moore
+        */
+        void normalizeToThreeNF();
+
         /*! \brief Converts the tables rows into a string representation
             \param [in] inTable The table whos rows are to be converted
             \date 10/28/2023

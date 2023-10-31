@@ -10,6 +10,29 @@
 
 namespace normalizer::table
 {
+    /* Constructors and Destructors */
+
+    Table::Table(const Table &other)
+    {
+        this->tableName = other.tableName;
+        this->ifNotExists = other.ifNotExists;
+
+        for (const std::string &primaryKey : other.getPrimaryKeys())
+        {
+            this->primaryKeys.push_back(primaryKey);
+        }
+
+        for (const foreign::ForeignKey &foreignKey : other.getForeignKeys())
+        {
+            this->foreignKeys.push_back(foreignKey);
+        }
+
+        for (const row::TableRow &row : other.getTableRows())
+        {
+            this->tableRows.push_back(row);
+        }
+    }
+
     /* Getters and Setters */
 
     std::string Table::getTableName() const
@@ -18,6 +41,11 @@ namespace normalizer::table
     }
 
     std::vector<row::TableRow> &Table::getTableRows()
+    {
+        return this->tableRows;
+    }
+
+    std::vector<row::TableRow> Table::getTableRows() const
     {
         return this->tableRows;
     }
@@ -133,5 +161,28 @@ namespace normalizer::table
         }
 
         return true;
+    }
+
+    Table &Table::operator=(const Table &other)
+    {
+        this->tableName = other.tableName;
+        this->ifNotExists = other.ifNotExists;
+
+        for (const std::string &primaryKey : other.getPrimaryKeys())
+        {
+            this->primaryKeys.push_back(primaryKey);
+        }
+
+        for (const foreign::ForeignKey &foreignKey : other.getForeignKeys())
+        {
+            this->foreignKeys.push_back(foreignKey);
+        }
+
+        for (const row::TableRow &row : other.getTableRows())
+        {
+            this->tableRows.push_back(row);
+        }
+
+        return *this;
     }
 }
