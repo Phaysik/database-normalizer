@@ -50,6 +50,14 @@ namespace normalizer::table
         */
         ~Table() {}
 
+        /*! \brief Copy constructors
+            \param[in] other The table to copy
+            \date 10/30/2023
+            \version 1.0
+            \author Matthew Moore
+        */
+        Table(const Table &other);
+
         /* Getters and Setters */
 
         /*! \brief Get the name of the table
@@ -64,9 +72,17 @@ namespace normalizer::table
             \date 10/26/2023
             \version 1.0
             \author Matthew Moore
-            \return std::vector<std::vector<row::TableRow>> The rows of the table
+            \return std::vector<TableRow> The rows of the table
         */
         std::vector<row::TableRow> &getTableRows();
+
+        /*! \brief Get non modifiable rows of the table
+            \date 10/30/2023
+            \version 1.0
+            \author Matthew Moore
+            \return std::vector<TableRow> The rows of the table
+        */
+        std::vector<row::TableRow> getTableRows() const;
 
         /*! \brief Get if the table should be created if it does not exist
             \date 10/26/2023
@@ -88,7 +104,7 @@ namespace normalizer::table
             \date 10/29/2023
             \version 1.0
             \author Matthew Moore
-            \return std::vector<foreign::ForeignKey> The foreign keys of the table
+            \return std::vector<ForeignKey> The foreign keys of the table
         */
         std::vector<foreign::ForeignKey> getForeignKeys() const;
 
@@ -161,6 +177,8 @@ namespace normalizer::table
             \return bool If the two tables are equal
         */
         bool operator==(const Table &other) const;
+
+        Table &operator=(const Table &other);
 
     private:
         std::string tableName;                        /*!< The name of the table */
