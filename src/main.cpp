@@ -7,6 +7,7 @@
 */
 
 #include "Normalizer/normalizer.h"
+#include "Normalizer/formConstants.h"
 #include "constants.h"
 
 /*! \brief The entry point for the program
@@ -17,7 +18,7 @@
 */
 int main()
 {
-    normalizer::Normalizer normalizer(2, normalizer::file::SQL_DATASET_FOLDER + "dataset.sql", normalizer::file::FUNCTIONAL_DEPENDENCIES_FOLDER + "dependencies.txt");
+    normalizer::Normalizer normalizer(normalizer::NormalizationForm::FOUR, normalizer::file::SQL_DATASET_FOLDER + "4nf.sql", normalizer::file::FUNCTIONAL_DEPENDENCIES_FOLDER + "4nf.txt");
 
     normalizer.normalize();
 

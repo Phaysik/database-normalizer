@@ -40,7 +40,7 @@ namespace normalizer
             \version 1.0
             \author Matthew Moore
         */
-        Normalizer(const NormalizationForm normalizeForm, const std::string &sqlFilePath, const std::string &dependencyFilePath);
+        Normalizer(const NormalizationForm &normalizeForm, const std::string &sqlFilePath, const std::string &dependencyFilePath);
 
         /*! \brief Creates a normalizer based on the desired normalization form as well as an already parsed sql table and functional dependencies file.
             \param[in] normalizeForm The form to normalize to
@@ -50,7 +50,7 @@ namespace normalizer
             \version 1.0
             \author Matthew Moore
         */
-        Normalizer(const NormalizationForm normalizeForm, const table::Table &sqlTable, const dependencies::DependencyManager &functionalDependencies) : normalizeTo(normalizeForm), table(sqlTable), dependencies(functionalDependencies) {}
+        Normalizer(const NormalizationForm &normalizeForm, const table::Table &sqlTable, const dependencies::DependencyManager &functionalDependencies) : normalizeTo(normalizeForm), table(sqlTable), dependencies(functionalDependencies) {}
 
         /*! \brief The default destructor
             \date 10/27/2023
@@ -77,6 +77,32 @@ namespace normalizer
             \author Matthew Moore
         */
         void normalize();
+
+        /* Operator Overloads */
+
+        /*! \brief Pretty print the \ref #normalizer::Normalizer "Normalizer"
+            \pre \p outputStream must be a stream that is writeable to
+            \post \p outputStream will have the updated text to write to the stream.
+            \param[in, out] outputStream The stream to write to
+            \param[in] normalizer The \ref #normalizer::Normalizer "Normalizer" to write out
+            \date 10/30/2023
+            \version 1.0
+            \author Matthew Moore
+            \return std::ostream The output stream
+        */
+        friend std::ostream &operator<<(std::ostream &outputStream, Normalizer &normalizer);
+
+    private:
+        /* Member Functions */
+
+        /*! \brief Converts a 1NF database into a string representation
+            \param [in] inTable The table to print
+            \date 10/28/2023
+            \version 1.0
+            \author Matthew Moore
+            \return std::string The string representation of the 1NF database
+        */
+        std::string printTable(table::Table &inTable);
 
         /*! \brief Determines if #table is in 1NF
             \details Checks to see if #table is in 1NF by determining if the columns are nullable, or if there is no primary key assigned
@@ -114,6 +140,13 @@ namespace normalizer
             \author Matthew Moore
         */
         void normalizeToBCNF();
+
+        /*! \brief Normalizes the database into 4NF
+            \date 10/30/2023
+            \version 1.0
+            \author Matthew Moore
+        */
+        void normalizeToFourNF();
 
         /*! \brief Converts the tables rows into a string representation
             \param [in] inTable The table whos rows are to be converted
@@ -174,6 +207,14 @@ namespace normalizer
         */
         std::vector<std::pair<std::string, std::string>> getBCNFDependencies();
 
+        /*! \brief Gets the multi valued dependencies in the database
+            \date 10/30/2023
+            \version 1.0
+            \author Matthew Moore
+            \return std::vector<std::pair<std::string, std::string>> The multi valued dependencies in the database
+        */
+        std::vector<std::pair<std::string, std::string>> getMultiValuedDependencies();
+
         /*! \brief Converts a row name into a table name
             \param[in] rowName The row name to be converted
             \date 10/30/2023
@@ -189,32 +230,6 @@ namespace normalizer
             \author Matthew Moore
         */
         void createTableOnCompositeKey();
-
-        /* Operator Overloads */
-
-        /*! \brief Pretty print the \ref #normalizer::Normalizer "Normalizer"
-            \pre \p outputStream must be a stream that is writeable to
-            \post \p outputStream will have the updated text to write to the stream.
-            \param[in, out] outputStream The stream to write to
-            \param[in] normalizer The \ref #normalizer::Normalizer "Normalizer" to write out
-            \date 10/30/2023
-            \version 1.0
-            \author Matthew Moore
-            \return std::ostream The output stream
-        */
-        friend std::ostream &operator<<(std::ostream &outputStream, Normalizer &normalizer);
-
-    private:
-        /* Member Functions */
-
-        /*! \brief Converts a 1NF database into a string representation
-            \param [in] inTable The table to print
-            \date 10/28/2023
-            \version 1.0
-            \author Matthew Moore
-            \return std::string The string representation of the 1NF database
-        */
-        std::string printTable(table::Table &inTable);
 
         NormalizationForm normalizeTo;                /*!< The normalization form to go to */
         table::Table table;                           /*!< The table to normalizer */
