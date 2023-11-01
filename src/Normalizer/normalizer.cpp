@@ -72,8 +72,10 @@ namespace normalizer
             this->normalizeToFourNF();
             break;
         case NormalizationForm::FIVE:
+            this->normalizeToFiveNF();
             break;
         default:
+            std::cout << "Normalization form not recognized" << std::endl;
             break;
         }
     }
@@ -457,6 +459,83 @@ namespace normalizer
                 if (found)
                 {
                     break;
+                }
+            }
+        }
+
+        for (const auto &pair : newTables) // Add the new tables to the normalized tables
+        {
+            this->normalizedTables.push_back(pair.second);
+        }
+    }
+
+    void Normalizer::normalizeToFiveNF()
+    {
+        this->normalizeToFourNF(); // To be in 5NF, it must first be in 4NF
+
+        std::vector<std::pair<std::string, std::string>> joinDependencies = this->getJoinDependencies();
+
+        if (joinDependencies.size() == 0)
+        {
+            return; // Already in 5NF as there are no join dependencies
+        }
+
+        std::unordered_map<us, table::Table> newTables;
+
+        us tableIndex = 0;
+
+        for (const auto &pair : joinDependencies)
+        {
+            bool found = false;
+
+            newTables[tableIndex] = table::Table(this->convertRowToTableName(pair.first + pair.second));
+
+            for (table::Table &normTable : this->normalizedTables)
+            {
+                for (table::row::TableRow &row : normTable.getTableRows())
+                {
+                    if (row.getRowName() == pair.first) // Check if the row has the join dependency
+                    {
+                        for (const table::row::TableRow &innerRow : normTable.getTableRows())
+                        {
+                            if (innerRow.getRowName() == pair.second) // Find the row that is the join dependency
+                            {
+                                newTables[tableIndex].addTableRow(row);             // Add the primary key row to the new table
+                                newTables[tableIndex].addTableRow(innerRow);        // Add the join dependency to the new table
+                                newTables[tableIndex].addPrimaryKey(pair.first);    // Add the primary key to the new table
+                                newTables[tableIndex++].addPrimaryKey(pair.second); // Add the primary key to the new table
+
+                                found = true;
+                                break;
+                            }
+                        }
+                        if (found)
+                        {
+                            break;
+                        }
+                    }
+                }
+                if (found)
+                {
+                    break;
+                }
+            }
+        }
+
+        for (const auto &pair : newTables) // Remove the rows and primary keys from the already original table
+        {
+            for (const auto &newPair : joinDependencies)
+            {
+                for (table::Table &normTable : this->normalizedTables)
+                {
+                    for (const table::row::TableRow &row : normTable.getTableRows())
+                    {
+                        if (row.getRowName() == newPair.second) // Check if the row has the join dependency
+                        {
+                            normTable.removePrimaryKey(row.getRowName()); // Remove the primary key from the original table
+                            normTable.removeTableRow(row);                // Remove the join dependency from the original table
+                        }
+                    }
                 }
             }
         }
@@ -868,21 +947,92 @@ namespace normalizer
                         {
                             for (const std::string &multiValued : dependencyRows[j].getMultiDependencies())
                             {
-                                for (const std::string &primaryKey : primaryKeys)
-                                {
-                                    multiValuedDependencies.push_back(std::make_pair(dependencyRowNames[i], multiValued));
-                                    break;
-                                }
+                                multiValuedDependencies.push_back(std::make_pair(dependencyRowNames[i], multiValued));
                             }
                         }
-
-                        break;
                     }
                 }
             }
         }
 
         return multiValuedDependencies;
+    }
+
+    std::vector<std::pair<std::string, std::string>> Normalizer::getJoinDependencies()
+    {
+        std::vector<std::pair<std::string, std::string>> joinDependencies;
+
+        std::unordered_map<std::string, std::vector<std::string>> primaryKeyDependencies;
+
+        std::vector<std::string> primaryKeys = this->table.getPrimaryKeys();
+        std::vector<dependencies::row::DependencyRow> dependencyRows = this->dependencies.getDependencyRows();
+        std::vector<std::string> dependencyRowNames;
+
+        std::unordered_map<std::string, std::vector<std::string>> dependencyList;
+
+        for (us i = 0; i < dependencyRows.size(); ++i)
+        {
+            dependencyRowNames.push_back(dependencyRows[i].getRowName()); // Get a list of all the dependency row names
+        }
+
+        for (us i = 0; i < dependencyRowNames.size(); ++i)
+        {
+            for (us j = 0; j < dependencyRows.size(); ++j)
+            {
+                if (dependencyRowNames[i] != dependencyRows[j].getRowName())
+                {
+                    continue;
+                }
+                else
+                {
+                    for (const std::string &singleValued : dependencyRows[j].getSingleDependencies())
+                    {
+                        dependencyList[dependencyRowNames[i]].push_back(singleValued); // Add the single valued dependencies to the dependency list
+                    }
+
+                    break;
+                }
+            }
+        }
+
+        for (const auto &pair : dependencyList)
+        {
+            if (pair.second.size() > 1) // If the dependency list is not more than 1, then it the cause of the join dependency
+            {
+                std::vector<std::string> potentialJoinDependecies = pair.second;
+
+                for (const auto &newPair : dependencyList) // Loop again through the dependency list to find join dependencies
+                {
+                    if (newPair.first == pair.first)
+                    {
+                        continue;
+                    }
+
+                    for (const std::string &potentialJoinDependency : potentialJoinDependecies)
+                    {
+                        if (newPair.first == potentialJoinDependency) // If the row is in the list of potential join dependencies
+                        {
+                            for (const std::string &singleValued : newPair.second) // Loop over the dependencies of the row
+                            {
+                                for (const std::string &newPotential : potentialJoinDependecies) // Loop over the potential join dependencies to figure out if the dependencies of the above row are also in the list of potential join dependencies
+                                {
+                                    if (singleValued == newPotential) // If in the list, there is a join dependency
+                                    {
+                                        joinDependencies.push_back(std::make_pair(pair.first, newPair.first)); // Add the row that has both newPair.first and singleValued as a dependency
+
+                                        joinDependencies.push_back(std::make_pair(pair.first, singleValued));
+
+                                        joinDependencies.push_back(std::make_pair(newPair.first, singleValued)); // Add the row that is dependent on pair.first but also determines singleValued
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        return joinDependencies;
     }
 
     std::string Normalizer::convertRowToTableName(const std::string &rowName) const

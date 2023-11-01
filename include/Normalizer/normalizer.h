@@ -148,6 +148,13 @@ namespace normalizer
         */
         void normalizeToFourNF();
 
+        /*! \brief Normalizes the database into 5NF
+            \date 10/31/2023
+            \version 1.0
+            \author Matthew Moore
+        */
+        void normalizeToFiveNF();
+
         /*! \brief Converts the tables rows into a string representation
             \param [in] inTable The table whos rows are to be converted
             \date 10/28/2023
@@ -214,6 +221,14 @@ namespace normalizer
             \return std::vector<std::pair<std::string, std::string>> The multi valued dependencies in the database
         */
         std::vector<std::pair<std::string, std::string>> getMultiValuedDependencies();
+
+        /*! \brief Gets the join dependencies in the database
+            \date 10/31/2023
+            \version 1.0
+            \author Matthew Moore
+            \return std::vector<std::pair<std::string, std::string>> The join dependencies in the database
+        */
+        std::vector<std::pair<std::string, std::string>> getJoinDependencies();
 
         /*! \brief Converts a row name into a table name
             \param[in] rowName The row name to be converted
