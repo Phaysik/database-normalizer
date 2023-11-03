@@ -20,6 +20,8 @@ int main()
     std::string dependencyFile;
     char normalizeTo;
     normalizer::NormalizationForm normalizationForm;
+    char getHighestNormalizedForm;
+    bool getNormalizedForm;
 
     std::cout << "Enter the path to the SQL dataset file (It must be in the resources/sql folder): ";
     std::cin >> datasetFile;
@@ -29,6 +31,9 @@ int main()
 
     std::cout << "Enter the normalization form required (1: 1NF, 2: 2NF, 3: 3NF, B: BCNF, 4: 4NF, 5: 5NF): ";
     std::cin >> normalizeTo;
+
+    std::cout << "Do you want to see the highest normalized form of the inputted table? (Yes: Y, No: N)" ;
+    std::cin >> getHighestNormalizedForm;
 
     switch (normalizeTo)
     {
@@ -55,7 +60,20 @@ int main()
         return 1;
     }
 
-    normalizer::Normalizer normalizer(normalizationForm, normalizer::file::SQL_DATASET_FOLDER + datasetFile, normalizer::file::FUNCTIONAL_DEPENDENCIES_FOLDER + dependencyFile);
+    switch (tolower(getHighestNormalizedForm))
+    {
+    case 'y':
+        getNormalizedForm = true;
+        break;
+    case 'n':
+        getNormalizedForm = false;
+        break;
+    default:
+        std::cout << "Invalid argument." << std::endl;
+        return 1;
+    }
+
+    normalizer::Normalizer normalizer(normalizationForm, getNormalizedForm, normalizer::file::SQL_DATASET_FOLDER + datasetFile, normalizer::file::FUNCTIONAL_DEPENDENCIES_FOLDER + dependencyFile);
 
     normalizer.normalize();
 

@@ -12,7 +12,7 @@ namespace normalizer
 {
     /* Constructors and Destructors */
 
-    Normalizer::Normalizer(const NormalizationForm &normalizeForm, const std::string &sqlFilePath, const std::string &dependencyFilePath) : normalizeTo(normalizeForm), hasPrimaryKey(true), hasNullableRows(false)
+    Normalizer::Normalizer(const NormalizationForm &normalizeForm, const bool getNormalizedForm, const std::string &sqlFilePath, const std::string &dependencyFilePath) : normalizeTo(normalizeForm), getHighestForm(getNormalizedForm), hasPrimaryKey(true), hasNullableRows(false)
     {
         file::FileManager sqlManager(sqlFilePath, false);
 
@@ -1084,6 +1084,36 @@ namespace normalizer
         this->normalizedTables.push_back(compositeTable);
     }
 
+    us Normalizer::getHighestNormalizedForm()
+    {
+        if (!this->determineInOneNF())
+        {
+            return 0;
+        }
+
+        if (this->getPartialDependencies().size() > 0)
+        {
+            return 1;
+        }
+
+        if (this->getTrasitiveDependencies().size() > 0)
+        {
+            return 2;
+        }
+
+        if (this->getMultiValuedDependencies().size() > 0)
+        {
+            return 3;
+        }
+
+        if (this->getJoinDependencies().size() > 0)
+        {
+            return 4;
+        }
+
+        return 5;
+    }
+
     /* Operator Overloads */
 
     std::ostream &operator<<(std::ostream &outputStream, Normalizer &normalizer)
@@ -1094,6 +1124,12 @@ namespace normalizer
             {
                 outputStream << normalizer.printTable(table) << std::endl;
             }
+        }
+
+        if (normalizer.getHighestForm)
+        {
+            outputStream << std::endl
+                         << "The highest normalized form of the table is: " << normalizer.getHighestNormalizedForm() << std::endl;
         }
 
         return outputStream;

@@ -34,23 +34,25 @@ namespace normalizer
 
         /*! \brief Create a normalizer based on the desired normalization form
             \param[in] normalizeForm The form to normalize to
+            \param[in] getNormalizedForm If the user wants to get the highest normalized form of the input table
             \param[in] sqlFilePath The file path of the sql dataset file
             \param[in] functionalDependencies The file path of the functional dependencies file path
             \date 10/27/2023
             \version 1.0
             \author Matthew Moore
         */
-        Normalizer(const NormalizationForm &normalizeForm, const std::string &sqlFilePath, const std::string &dependencyFilePath);
+        Normalizer(const NormalizationForm &normalizeForm, const bool getNormalizedForm, const std::string &sqlFilePath, const std::string &dependencyFilePath);
 
         /*! \brief Creates a normalizer based on the desired normalization form as well as an already parsed sql table and functional dependencies file.
             \param[in] normalizeForm The form to normalize to
+            \param[in] getNormalizedForm If the user wants to get the highest normalized form of the input table
             \param[in] sqlTable The already parsed SQL dataset
             \param[in] functionalDependencies The already parsed functional dependencies
             \date 10/27/2023
             \version 1.0
             \author Matthew Moore
         */
-        Normalizer(const NormalizationForm &normalizeForm, const table::Table &sqlTable, const dependencies::DependencyManager &functionalDependencies) : normalizeTo(normalizeForm), table(sqlTable), dependencies(functionalDependencies) {}
+        Normalizer(const NormalizationForm &normalizeForm, const bool getNormalizedForm, const table::Table &sqlTable, const dependencies::DependencyManager &functionalDependencies) : normalizeTo(normalizeForm), getHighestForm(getNormalizedForm), table(sqlTable), dependencies(functionalDependencies) {}
 
         /*! \brief The default destructor
             \date 10/27/2023
@@ -246,7 +248,16 @@ namespace normalizer
         */
         void createTableOnCompositeKey();
 
+        /*! \brief Gets the highest normalized form of the user's input table
+            \date 11/02/2023
+            \version 1.0
+            \author Matthew Moore
+            \return us The highest normalized form of the user's input table
+        */
+        us getHighestNormalizedForm();
+
         NormalizationForm normalizeTo;                /*!< The normalization form to go to */
+        bool getHighestForm;                          /*!< If the user wants to get the highest normalized form of the table */
         table::Table table;                           /*!< The table to normalizer */
         std::vector<table::Table> normalizedTables;   /*!< The normalized tables */
         dependencies::DependencyManager dependencies; /*!< The functional dependencies of the project */
