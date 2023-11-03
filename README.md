@@ -54,15 +54,15 @@ This program expects both a SQL dataset file and the text file of its dependenci
 
   - Defining the row
 
-  ```sql
-    data_type [NOT NULL | NULL]
-  ```
+    ```sql
+      data_type [NOT NULL | NULL]
+    ```
 
   - Data types
 
-  ```sql
-    VARCHAR(data_size) | INT[(data_size)] | INTEGER[(data_size)]
-  ```
+    ```sql
+      VARCHAR(data_size) | INT[(data_size)] | INTEGER[(data_size)]
+    ```
 
 #### Functional Dependency files
 
@@ -71,21 +71,21 @@ This program expects both a SQL dataset file and the text file of its dependenci
 - These files are expected to follow the following syntax
   - Defining both single and multiple dependencies
 
-  ```txt
-    row_name -> row_name | (row_name_one, row_name_two)
-  ```
+    ```txt
+      row_name -> row_name | (row_name_one, row_name_two)
+    ```
 
   - Defining both single and multiple multi-valued dependencies
 
-  ```txt
-    row_name ->> row_name | (row_name_one, row_name_two)
-  ```
+    ```txt
+      row_name ->> row_name | (row_name_one, row_name_two)
+    ```
 
   - Defining the primary key of the table
 
-  ```txt
-    KEY: row_name | (row_name_one, row_name_two)
-  ```
+    ```txt
+      KEY: row_name | (row_name_one, row_name_two)
+    ```
 
 ### Specific Examples of Setting a Desired Normal Form
 
